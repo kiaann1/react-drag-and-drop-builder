@@ -47,10 +47,7 @@ const Sidebar = ({ onReset }) => {
         </div>
         
         <FormElementsPalette searchTerm={searchTerm} />
-      </div>
-      
-      {/* Clear All Button at bottom */}
-      <div className="p-6 border-t border-gray-200">
+              <div className="p-6 border-t border-gray-200">
         <button 
           onClick={handleReset}
           className="w-full px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-md hover:bg-red-50 hover:border-red-400 transition-colors"
@@ -64,6 +61,8 @@ const Sidebar = ({ onReset }) => {
           </div>
         </button>
       </div>
+      </div>
+
     </div>
   );
 };
