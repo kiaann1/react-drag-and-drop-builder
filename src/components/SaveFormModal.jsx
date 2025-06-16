@@ -1305,7 +1305,7 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/10 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg w-11/12 max-w-4xl max-h-5/6 overflow-hidden flex flex-col">
         <div className="flex justify-between items-center p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-900">Save & Export Form</h2>
