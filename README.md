@@ -12,7 +12,6 @@ A powerful, intuitive drag-and-drop form builder built with React, featuring rea
 - **Responsive Design**: Forms automatically adapt to different screen sizes
 - **Live Editing**: Modify fields without losing your progress
 
-
 ### ⚙️ **Customization Options**
 
 #### Field Configuration
@@ -44,9 +43,55 @@ A powerful, intuitive drag-and-drop form builder built with React, featuring rea
 ### 📱 **Export Options**
 - **HTML + CSS + JavaScript**: Complete standalone form
 - **React Component**: Ready-to-use React code
+- **TypeScript Component**: Strongly typed React code
 - **Vue Component**: Vue.js integration
+- **Svelte Component**: Svelte code export
 - **JSON Schema**: Form structure data
+- **WordPress Shortcode**: Export for WordPress/Contact Form 7
 - **Embed Code**: iframe integration
+
+---
+
+## 🆕 Recent Updates
+
+### Export Modal & Copy Functionality
+- **Copy to Clipboard**: Exported code can now be copied directly to clipboard with a single click.
+- **"Copied" Popup**: Visual feedback appears above the copy button when code is copied.
+- **Form Name Requirement**: You must enter a form name before copying/exporting code. A warning is shown if not provided.
+- **Clipboard Fallbacks**: Works in all modern browsers, with fallbacks for older ones.
+
+### Export Formats
+- **Svelte Component Export**: Added Svelte code export.
+- **TypeScript Component Export**: Added TypeScript React code export.
+- **WordPress/Contact Form 7**: Improved shortcode and CF7 export.
+- **Bootstrap HTML Export**: HTML export uses Bootstrap 5 and includes all field types.
+- **All exports**: Respect form options (colors, labels, etc).
+
+### Security & Validation
+- **Input Validation**: All user input is validated and sanitized on both client and server.
+- **XSS Prevention**: All user-submitted data is sanitized before rendering or storing.
+- **Rate Limiting**: Simple client-side rate limiter for form submissions.
+- **CSRF Protection**: CSRF tokens and same-site cookies recommended for backend endpoints.
+- **Export Security**: Exported CSV/Excel data is sanitized to prevent XSS/injection.
+
+### Usability & Accessibility
+- **Copy Button Accessibility**: Keyboard and screen reader accessible.
+- **Form Name Input**: Clear error message if form name is missing.
+- **Prevent Double Submissions**: Submit button disables on submit or shows loading.
+- **Clear Labels & Error Messages**: All fields have accessible labels and error feedback.
+
+### UI/UX Improvements
+- **Popup Feedback**: "Copied" popup fades in/out above the copy button.
+- **Export Modal**: Responsive, accessible, and visually improved.
+- **Form Name Placeholder**: Now clearly states that a name is required for export.
+- **Export Format Selector**: Improved dropdown and preview area.
+
+### Bug Fixes
+- **Clipboard Copy**: Fixed issues with code not copying in some browsers.
+- **Export Preview**: Always shows latest code for selected format.
+- **React Export**: Fallback provided if no custom generator is present.
+
+---
 
 ## 🚀 Quick Start
 
@@ -86,6 +131,8 @@ npm run build
 yarn build
 ```
 
+---
+
 ## 🎯 Usage Guide
 
 ### Building Your First Form
@@ -95,7 +142,7 @@ yarn build
 3. **Customize Layout**: Use field options to set width and positioning
 4. **Preview Form**: Use the live preview to test your form
 5. **Style Form**: Access Form Options to customize colors and appearance
-6. **Export**: Choose your preferred export format
+6. **Export**: Choose your preferred export format and copy the code
 
 ### Field Configuration
 
@@ -117,6 +164,8 @@ Access comprehensive form settings:
 - **Validation**: Error handling, validation timing
 - **Export**: Output format and inclusion options
 
+---
+
 ## 🏗️ Project Structure
 
 ```
@@ -131,6 +180,7 @@ src/
 │   ├── FormOptionsModal.jsx    # Form-wide settings
 │   ├── LivePreview.jsx         # Real-time form preview
 │   ├── PreviewModal.jsx        # Full-screen preview
+│   ├── SaveFormModal.jsx       # Save/export modal (copy to clipboard, etc)
 │   ├── Header.jsx              # Application header
 │   ├── Sidebar.jsx             # Left sidebar container
 │   └── StarRating.jsx          # Star rating component
@@ -138,6 +188,8 @@ src/
 │   └── security.js             # Security utilities
 └── App.jsx                     # Root application component
 ```
+
+---
 
 ## 🔧 Technical Details
 
@@ -165,6 +217,8 @@ src/
 - Safari 14+
 - Edge 90+
 
+---
+
 ## 🛠️ Development
 
 ### Available Scripts
@@ -187,6 +241,8 @@ src/
 3. **Code Quality**: Follow ESLint rules and React best practices
 4. **Security**: Validate all inputs and sanitize outputs
 
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Please follow these steps:
@@ -195,7 +251,7 @@ We welcome contributions! Please follow these steps:
 2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
 3. **Commit changes** (`git commit -m 'Add amazing feature'`)
 4. **Push to branch** (`git push origin feature/amazing-feature`)
-5. **Open a Pull Request**
+5. **Open a Pull Request`
 
 ### Contribution Guidelines
 
@@ -212,9 +268,13 @@ We welcome contributions! Please follow these steps:
 - Provide screenshots when helpful
 - Check existing issues before creating new ones
 
+---
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
 
 ## 🙏 Acknowledgments
 
@@ -222,6 +282,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Tailwind CSS** for beautiful default styling
 - **React Hook Form** for robust form handling
 - **Heroicons** for beautiful SVG icons
-
 
 *If you find this project helpful, please consider giving it a ⭐ on GitHub!*
