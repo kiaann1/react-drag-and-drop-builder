@@ -17,6 +17,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import FormCanvas from './FormCanvas';
 import LivePreview from './LivePreview';
+import SaveFormModal from './SaveFormModal';
 
 const FormBuilder = () => {
   const [formElements, setFormElements] = useState([]);
@@ -24,6 +25,7 @@ const FormBuilder = () => {
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(false);
   const [formOptions, setFormOptions] = useState({});
   const [error, setError] = useState(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -220,29 +222,16 @@ const FormBuilder = () => {
         return;
       }
 
-      // Validate all elements before saving
+      // Validate all elements before opening save modal
       formElements.forEach(element => validateElementData(element));
-
-      // Here you would typically save to a backend
-      const formData = {
-        elements: formElements,
-        options: formOptions,
-        timestamp: new Date().toISOString(),
-        version: '1.0',
-      };
-
-      console.log('Save form:', formData);
       
-      // TODO: Implement actual save functionality with proper error handling
-      // Example: await saveForm(formData);
-      
+      setShowSaveModal(true);
       setError(null);
-      alert('Form saved successfully!');
     } catch (err) {
       console.error('Save error:', err);
       setError(err.message || 'Failed to save form');
     }
-  }, [formElements, formOptions, validateElementData]);
+  }, [formElements, validateElementData]);
 
   const togglePreviewExpand = useCallback(() => {
     setIsPreviewExpanded(prev => !prev);
@@ -357,6 +346,13 @@ const FormBuilder = () => {
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      <SaveFormModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        formElements={memoizedFormElements}
+        formOptions={formOptions}
+      />
     </div>
   );
 };
