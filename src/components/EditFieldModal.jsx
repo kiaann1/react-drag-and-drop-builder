@@ -107,8 +107,6 @@ const EditFieldModal = ({ isOpen, onClose, onSave, element, onSwitchToOptions })
     }
   }, [element]);
 
-  if (!isOpen || !element) return null;
-
   const handleSave = useCallback(() => {
     try {
       // Final validation before saving
@@ -146,7 +144,9 @@ const EditFieldModal = ({ isOpen, onClose, onSave, element, onSwitchToOptions })
       console.error('Save error:', err);
       setError('Failed to save field data');
     }
-  }, [formData, element.id, onSave, onClose]);
+  }, [formData, element?.id, onSave, onClose]);
+
+  if (!isOpen || !element) return null;
 
   const renderFieldSpecificOptions = () => {
     switch (element.type) {
