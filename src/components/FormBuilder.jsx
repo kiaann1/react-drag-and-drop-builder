@@ -139,12 +139,19 @@ const FormBuilder = () => {
           }
           return [...prev, validatedElement];
         });
+      } else {
+        // Handle reordering of existing elements
+        const oldIndex = formElements.findIndex(el => el.id === active.id);
+        const newIndex = formElements.findIndex(el => el.id === over.id);
+        if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+          setFormElements(prev => arrayMove(prev, oldIndex, newIndex));
+        }
       }
     } catch (err) {
       console.error('Drag end error:', err);
       setError(err.message || 'Failed to add form element');
     }
-  }, [validateElementData]);
+  }, [validateElementData, formElements]);
 
   const handleDragCancel = useCallback(() => {
     setActiveId(null);
