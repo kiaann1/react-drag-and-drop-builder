@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import generateHTML from '../utils/generateHTML';
 import hexToRgb from '../utils/hexToRgb';
 
 const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
   const [formName, setFormName] = useState(formOptions.formTitle || '');
   const [selectedFormat, setSelectedFormat] = useState('html');
+  const [copied, setCopied] = useState(false);
+  const codeRef = useRef(null);
+
+  // Ensure popup resets on modal open/close
+  useEffect(() => {
+    setCopied(false);
+  }, [isOpen, selectedFormat, formName, formElements]);
 
   // --- CODE GENERATION FUNCTIONS ---
   const generateJSON = () => {
@@ -384,7 +391,6 @@ export default ${componentName};`;
             name="${fieldName}"
             value={(formData.${fieldName} as string) || ''}
             onChange={handleChange}
-            style={inputStyle}
             ${required}
           >
             <option value="">Select ${label}</option>
@@ -1073,11 +1079,15 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
 </style>`;
   };
 
+  // Ensure generateReactComponent is defined
+  const generateReactComponent = () => {
+    return generateHTML(formElements, formOptions);
+  };
+
   // Ensure Shortcode export is present (already implemented as generateWordPressShortcode)
 
   // Update exportFormats to include Svelte and Shortcode
   const exportFormats = [
-    { value: 'html', label: 'HTML (Ready to Use)' },
     { value: 'json', label: 'JSON Data' },
     { value: 'react', label: 'React Component' },
     { value: 'typescript', label: 'TypeScript Component' },
@@ -1087,14 +1097,13 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
     { value: 'css-framework', label: 'HTML + Bootstrap' },
   ];
 
-  // Update generateCode to support Svelte
+  // Update generateCode to include the fallback
   const generateCode = () => {
     switch (selectedFormat) {
       case 'json': return generateJSON();
       case 'wordpress': return generateWordPressShortcode();
       case 'contact-form-7': return generateContactForm7();
       case 'react': return generateReactComponent();
-      case 'html': return generateHTML();
       case 'typescript': return generateTypeScriptComponent();
       case 'vue': return generateVueComponent();
       case 'css-framework': return generateBootstrapHTML();
@@ -1106,7 +1115,6 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
   // Update getFileExtension to support Svelte
   const getFileExtension = () => {
     const extensions = {
-      html: 'html',
       'css-framework': 'html',
       json: 'json',
       vue: 'vue',
@@ -1119,20 +1127,45 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
     return extensions[selectedFormat] || 'txt';
   };
 
-  const handleExport = () => {
+  // Remove handleExport, replace with handleCopyToClipboard
+  const handleCopyToClipboard = async () => {
     if (!formName.trim()) {
-      alert('Please enter a form name before exporting.');
+      alert('Please enter a form name before copying.');
       return;
     }
-
     const code = generateCode();
-    const blob = new Blob([code], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${formName.replace(/[^a-zA-Z0-9]/g, '_') || 'form'}.${getFileExtension()}`;
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      // Try modern clipboard API first
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(code);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else if (codeRef.current) {
+        // Fallback: select and copy from the textarea
+        codeRef.current.removeAttribute('readonly'); // allow selection
+        codeRef.current.select();
+        document.execCommand('copy');
+        codeRef.current.setAttribute('readonly', ''); // restore readonly
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        // Fallback: create a temporary textarea
+        let textarea = document.createElement('textarea');
+        textarea.value = code;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'absolute';
+        textarea.style.left = '-9999px';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch (err) {
+      setCopied(false);
+      alert('Failed to copy to clipboard.');
+    }
   };
 
   const handleSave = () => {
@@ -1177,8 +1210,8 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
                   type="text"
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  placeholder="Enter form name"
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="You must enter a form name in order to copy export"
+                  className="w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
@@ -1187,7 +1220,7 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
                 <select
                   value={selectedFormat}
                   onChange={(e) => setSelectedFormat(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   {exportFormats.map(format => (
                     <option key={format.value} value={format.value}>
@@ -1206,36 +1239,45 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Code Preview:</label>
               <textarea
+                key={selectedFormat + formName + formElements.length}
+                ref={codeRef}
                 value={generateCode()}
                 readOnly
                 className="w-full h-80 p-3 border border-gray-300 rounded-md font-mono text-xs bg-gray-50 resize-none"
                 placeholder="Generated code will appear here..."
+                tabIndex={-1}
               />
             </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
-          <button 
-            onClick={onClose} 
-            className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
-          >
-            Cancel
-          </button>
-          <button 
-            onClick={handleSave} 
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            disabled={!formName.trim()}
-          >
-            Save to Browser
-          </button>
-          <button 
-            onClick={handleExport} 
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            disabled={!formName.trim()}
-          >
-            Export {exportFormats.find(f => f.value === selectedFormat)?.label}
-          </button>
+        <div className="flex flex-col items-end gap-1 p-6 border-t bg-gray-50">
+          <div className="flex gap-3">
+            <button 
+              onClick={onClose} 
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+            >
+              Cancel
+            </button>
+            <div className="relative flex flex-col items-center">
+              <div
+                className={`pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 bg-green-500 text-white text-xs px-3 py-1 rounded shadow z-10 transition-opacity duration-500 ${copied ? 'opacity-100' : 'opacity-0'}`}
+                style={{ minWidth: 60, textAlign: 'center' }}
+                aria-live="polite"
+              >
+                Copied
+              </div>
+              <button 
+                type="button"
+                onClick={handleCopyToClipboard}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                disabled={!formName.trim()}
+                tabIndex={0}
+              >
+                Copy to Clipboard
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
