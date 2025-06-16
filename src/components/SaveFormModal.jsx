@@ -29,55 +29,137 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
   };
 
   const generateWordPressShortcode = () => {
+    // Map builder types to CF7 shortcode types
+    const cf7TypeMap = {
+      text: 'text',
+      paragraph: 'textarea',
+      email: 'email',
+      number: 'number',
+      date: 'date',
+      phone: 'tel',
+      hidden: 'hidden',
+      select: 'select',
+      checkbox: 'checkbox',
+      radio: 'radio',
+      file: 'file',
+      input: 'text',
+      password: 'password',
+      url: 'url',
+    };
+
     const elementsShortcode = formElements.map(element => {
-      const attrs = [
-        `type="${element.type}"`,
-        `name="${element.id}"`,
-        element.required ? 'required' : '',
-        element.placeholder ? `placeholder="${element.placeholder}"` : `placeholder="${element.label}"`,
-        element.customClass ? `class="${element.customClass}"` : '',
-        element.defaultValue ? `default="${element.defaultValue}"` : '',
-        element.helpText ? `help="${element.helpText}"` : '',
-      ].filter(attr => attr).join(' ');
-      
-      if (element.type === 'select' && element.options) {
-        const options = element.options.map(opt => `"${opt.label}"`).join(' ');
-        return `[select ${attrs} options="${options}"]`;
+      const cf7Type = cf7TypeMap[element.type] || 'text';
+      const required = element.required ? '*' : '';
+      const name = element.id || 'field';
+
+      // Wrap each field in a <div> with inline style for spacing and font
+      let fieldShortcode = '';
+      switch (cf7Type) {
+        case 'textarea':
+          fieldShortcode = `[textarea${required} ${name} placeholder "${element.placeholder || element.label || ''}"]`;
+          break;
+        case 'select':
+          if (element.options && element.options.length > 0) {
+            const options = element.options.map(opt => opt.label || opt.value).join(' ');
+            fieldShortcode = `[select${required} ${name} "${options}"]`;
+          } else {
+            fieldShortcode = `[select${required} ${name}]`;
+          }
+          break;
+        case 'checkbox':
+          if (element.options && element.options.length > 0) {
+            const options = element.options.map(opt => opt.label || opt.value).join(' ');
+            fieldShortcode = `[checkbox${required} ${name} "${options}"]`;
+          } else {
+            fieldShortcode = `[checkbox${required} ${name}]`;
+          }
+          break;
+        case 'radio':
+          if (element.options && element.options.length > 0) {
+            const options = element.options.map(opt => opt.label || opt.value).join(' ');
+            fieldShortcode = `[radio${required} ${name} "${options}"]`;
+          } else {
+            fieldShortcode = `[radio${required} ${name}]`;
+          }
+          break;
+        case 'file':
+          fieldShortcode = `[file${required} ${name}]`;
+          break;
+        case 'hidden':
+          fieldShortcode = `[hidden ${name} "${element.defaultValue || ''}"]`;
+          break;
+        default:
+          fieldShortcode = `[${cf7Type}${required} ${name} placeholder "${element.placeholder || element.label || ''}"]`;
       }
-      
-      return `[${element.type} ${attrs}]`;
+
+      // Add label and help text with inline styles
+      const labelColor = formOptions.labelTextColor || '#374151';
+      const inputTextColor = formOptions.inputTextColor || '#111827';
+      const helpText = element.helpText
+        ? `<div style="font-size:12px;color:${formOptions.placeholderTextColor || '#9CA3AF'};margin-top:4px;">${element.helpText}</div>`
+        : '';
+
+      return `<div style="margin-bottom:18px;">
+  <label style="display:block;font-weight:500;color:${labelColor};margin-bottom:6px;">${element.label || name}${element.required ? ' *' : ''}</label>
+  <span style="display:block;color:${inputTextColor};margin-bottom:2px;">${fieldShortcode}</span>
+  ${helpText}
+</div>`;
     }).join('\n');
 
-    return `[contact-form-7 id="${Date.now()}" title="${formOptions.formTitle || formName}"]
-${formOptions.formTitle ? `<h2>${formOptions.formTitle}</h2>` : ''}
-${formOptions.formDescription ? `<p>${formOptions.formDescription}</p>` : ''}
+    // Inline style for the form container and submit button
+    const formBg = formOptions.backgroundColor || '#FFFFFF';
+    const borderColor = formOptions.inputBorderColor || '#D1D5DB';
+    const borderRadius = '8px';
+    const padding = '30px';
+    const submitBg = formOptions.submitButtonColor || '#3B82F6';
+    const submitColor = formOptions.submitButtonTextColor || '#FFFFFF';
+    const submitHoverBg = formOptions.submitButtonHoverColor || '#2563EB';
 
-${elementsShortcode}
-
-[submit "${formOptions.submitButtonText || 'Send'}"]
-
+    return `<div style="background:${formBg};padding:${padding};border-radius:${borderRadius};border:1px solid ${borderColor};max-width:600px;margin:auto;">
+  ${formOptions.formTitle ? `<h2 style="color:${formOptions.labelTextColor || '#374151'};margin-bottom:12px;">${formOptions.formTitle}</h2>` : ''}
+  ${formOptions.formDescription ? `<p style="color:${formOptions.labelTextColor || '#666'};margin-bottom:18px;">${formOptions.formDescription}</p>` : ''}
+  ${elementsShortcode}
+  <div style="margin-top:24px;">
+    [submit "${formOptions.submitButtonText || 'Send'}"]
+  </div>
+</div>
 <style>
-.wpcf7-form {
-  background: ${formOptions.backgroundColor || '#FFFFFF'};
-  padding: 30px;
-  border-radius: 8px;
-}
 .wpcf7-form input, .wpcf7-form textarea, .wpcf7-form select {
-  color: ${formOptions.inputTextColor || '#111827'};
-  border-color: ${formOptions.inputBorderColor || '#D1D5DB'};
+  color: ${formOptions.inputTextColor || '#111827'} !important;
+  border-color: ${formOptions.inputBorderColor || '#D1D5DB'} !important;
+  background: ${formOptions.backgroundColor || '#FFFFFF'} !important;
+  border-radius: 4px !important;
+  padding: 12px !important;
+  font-size: 15px !important;
+}
+.wpcf7-form input:focus, .wpcf7-form textarea:focus, .wpcf7-form select:focus {
+  border-color: ${formOptions.inputFocusBorderColor || '#3B82F6'} !important;
+  outline: none !important;
+}
+.wpcf7-form input::placeholder, .wpcf7-form textarea::placeholder {
+  color: ${formOptions.placeholderTextColor || '#9CA3AF'} !important;
 }
 .wpcf7-form label {
-  color: ${formOptions.labelTextColor || '#374151'};
+  color: ${formOptions.labelTextColor || '#374151'} !important;
 }
 .wpcf7-submit {
-  background: ${formOptions.submitButtonColor || '#3B82F6'} !important;
-  color: ${formOptions.submitButtonTextColor || '#FFFFFF'} !important;
+  background: ${submitBg} !important;
+  color: ${submitColor} !important;
+  padding: 12px 24px !important;
+  border: none !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  width: 100% !important;
+  margin-top: 10px !important;
+  transition: background 0.2s;
 }
 .wpcf7-submit:hover {
-  background: ${formOptions.submitButtonHoverColor || '#2563EB'} !important;
+  background: ${submitHoverBg} !important;
 }
 </style>
-[/contact-form-7]`;
+`;
   };
 
   const generateContactForm7 = () => {
@@ -1086,14 +1168,13 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
 
   // Ensure Shortcode export is present (already implemented as generateWordPressShortcode)
 
-  // Update exportFormats to include Svelte and Shortcode
+  // Update exportFormats to remove Contact Form 7
   const exportFormats = [
     { value: 'json', label: 'JSON Data' },
     { value: 'react', label: 'React Component' },
     { value: 'typescript', label: 'TypeScript Component' },
     { value: 'svelte', label: 'Svelte Component' },
     { value: 'wordpress', label: 'WordPress Shortcode' },
-    { value: 'contact-form-7', label: 'Contact Form 7' },
     { value: 'css-framework', label: 'HTML + Bootstrap' },
   ];
 
@@ -1102,7 +1183,6 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
     switch (selectedFormat) {
       case 'json': return generateJSON();
       case 'wordpress': return generateWordPressShortcode();
-      case 'contact-form-7': return generateContactForm7();
       case 'react': return generateReactComponent();
       case 'typescript': return generateTypeScriptComponent();
       case 'vue': return generateVueComponent();
@@ -1121,7 +1201,6 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
       typescript: 'tsx',
       react: 'jsx',
       wordpress: 'txt',
-      'contact-form-7': 'txt',
       svelte: 'svelte',
     };
     return extensions[selectedFormat] || 'txt';
