@@ -52,7 +52,6 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
       const required = element.required ? '*' : '';
       const name = element.id || 'field';
 
-      // Wrap each field in a <div> with inline style for spacing and font
       let fieldShortcode = '';
       switch (cf7Type) {
         case 'textarea':
@@ -105,6 +104,43 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
   ${helpText}
 </div>`;
     }).join('\n');
+
+    // --- BEHAVIOUR: Add JS for redirect, success, error, validation ---
+    // These will be injected as a <script> block after the form.
+    // Only add if at least one behaviour option is set.
+    let behaviourScript = '';
+    const hasBehaviour =
+      formOptions.redirectUrl ||
+      formOptions.successMessage ||
+      formOptions.errorMessage ||
+      formOptions.showValidationOnSubmit !== undefined;
+
+    if (hasBehaviour) {
+      behaviourScript = `
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var form = document.querySelector('.wpcf7 form');
+  if (!form) return;
+
+  document.addEventListener('wpcf7mailsent', function(event) {
+    ${formOptions.successMessage ? `alert(${JSON.stringify(formOptions.successMessage)});` : ''}
+    ${formOptions.redirectUrl ? `window.location.href = ${JSON.stringify(formOptions.redirectUrl)};` : ''}
+  }, false);
+
+  document.addEventListener('wpcf7invalid', function(event) {
+    ${formOptions.errorMessage ? `alert(${JSON.stringify(formOptions.errorMessage)});` : ''}
+  }, false);
+
+  ${formOptions.showValidationOnSubmit === false ? `
+  // Disable CF7 validation on submit (not recommended)
+  if (form) {
+    form.removeAttribute('novalidate');
+  }
+  ` : ''}
+});
+</script>
+`;
+    }
 
     // Inline style for the form container and submit button
     const formBg = formOptions.backgroundColor || '#FFFFFF';
@@ -159,6 +195,7 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
   background: ${submitHoverBg} !important;
 }
 </style>
+${behaviourScript}
 `;
   };
 
