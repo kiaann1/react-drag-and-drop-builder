@@ -2,7 +2,7 @@
 
 A powerful, intuitive drag-and-drop form builder built with React, featuring real-time preview, extensive customization options, and robust security features.
 
-![Form Builder Demo](./demo-screenshot.png)
+![Form Builder Demo](demo-screenshot.png)
 
 ## ✨ Features
 
