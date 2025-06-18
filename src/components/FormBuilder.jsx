@@ -7,6 +7,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  MeasuringStrategy, // <-- add this import
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -28,10 +29,11 @@ const FormBuilder = () => {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [selectedElement, setSelectedElement] = useState(null);
 
+  // Use pointer activation constraint for better drag start
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Prevent accidental drags
+        distance: 2, // Lower distance for more responsive drag
       },
     }),
     useSensor(KeyboardSensor, {
@@ -45,7 +47,8 @@ const FormBuilder = () => {
       throw new Error('Invalid element data');
     }
 
-    const requiredFields = ['id', 'type', 'label'];
+    const requiredFields = ['id', 'type'];
+    // Do NOT require 'label' for any field type
     for (const field of requiredFields) {
       if (!data[field] || typeof data[field] !== 'string') {
         throw new Error(`Missing or invalid required field: ${field}`);
@@ -319,6 +322,11 @@ const FormBuilder = () => {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
+        measuring={{
+          droppable: {
+            strategy: MeasuringStrategy.Always, // More responsive drop targets
+          },
+        }}
       >
         <div className="flex w-full" style={{ height: 'calc(100vh - 73px)' }}>
           {!isPreviewExpanded && (

@@ -54,8 +54,10 @@ const EditFieldModal = ({ isOpen, onClose, onSave, element, onSwitchToOptions })
     switch (name) {
       case 'minLength':
       case 'maxLength':
+        // If empty, treat as 0 (valid)
+        if (value === '' || value === null || value === undefined) return '';
         const length = parseInt(value, 10);
-        if (value !== '' && (isNaN(length) || length < 0 || length > 10000)) {
+        if (isNaN(length) || length < 0 || length > 10000) {
           return 'Length must be between 0 and 10000';
         }
         break;
@@ -109,42 +111,23 @@ const EditFieldModal = ({ isOpen, onClose, onSave, element, onSwitchToOptions })
 
   const handleSave = useCallback(() => {
     try {
-      // Final validation before saving
-      const requiredFields = ['label'];
-      for (const field of requiredFields) {
-        if (!formData[field] || formData[field].trim() === '') {
-          setError(`${field} is required`);
-          return;
-        }
-      }
 
       // Validate min/max length relationship
-      if (formData.minLength && formData.maxLength) {
-        const min = parseInt(formData.minLength, 10);
-        const max = parseInt(formData.maxLength, 10);
-        if (min > max) {
-          setError('Minimum length cannot be greater than maximum length');
-          return;
-        }
+      // If minLength is empty, treat as 0
+      const minLen = formData.minLength === '' ? 0 : parseInt(formData.minLength, 10);
+      const maxLen = formData.maxLength === '' ? undefined : parseInt(formData.maxLength, 10);
+      if (maxLen !== undefined && minLen > maxLen) {
+        setError('Minimum length cannot be greater than maximum length');
+        return;
       }
-
-      // Validate min/max value relationship
-      if (formData.min && formData.max) {
-        const min = parseFloat(formData.min);
-        const max = parseFloat(formData.max);
-        if (min > max) {
-          setError('Minimum value cannot be greater than maximum value');
-          return;
-        }
-      }
-
-      onSave(element.id, formData);
+      // Ensure id and type are included in the saved data
+      onSave(element.id, { ...formData, id: element.id, type: element.type, minLength: minLen, maxLength: maxLen });
       onClose();
     } catch (err) {
       console.error('Save error:', err);
       setError('Failed to save field data');
     }
-  }, [formData, element?.id, onSave, onClose]);
+  }, [formData, element?.id, element?.type, onSave, onClose]);
 
   if (!isOpen || !element) return null;
 

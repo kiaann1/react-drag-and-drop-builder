@@ -46,7 +46,8 @@ const FieldOptionsModal = ({ isOpen, onClose, onSave, element, onSwitchToEdit })
   if (!isOpen || !element) return null;
 
   const handleSave = () => {
-    onSave(element.id, optionsData);
+    // Ensure the id is included in the saved data
+    onSave(element.id, { ...optionsData, id: element.id, type: element.type });
     onClose();
   };
 
@@ -179,6 +180,7 @@ const FieldOptionsModal = ({ isOpen, onClose, onSave, element, onSwitchToEdit })
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {optionsData.options.map((option, index) => (
                   <div key={index} className="flex gap-2 items-center">
+                    {/* Only show label input if label is not empty, otherwise just show value */}
                     <input
                       type="text"
                       value={option.label}
