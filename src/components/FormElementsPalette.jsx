@@ -528,12 +528,6 @@ const FormElementsPalette = ({ searchTerm = '' }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <p className="text-gray-500 text-sm">No fields match your search</p>
-          <button
-            onClick={() => setSearchTerm('')}
-            className="text-blue-600 hover:text-blue-700 text-sm mt-2"
-          >
-            Clear search
-          </button>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2">
