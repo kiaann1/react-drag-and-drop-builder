@@ -1,5 +1,44 @@
 import React, { useState } from 'react';
+import { useDraggable } from '@dnd-kit/core';
 import fields from '../../fields.json';
+
+// Draggable preview for each field
+const DraggableElement = ({ element }) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `palette-${element.type}`,
+    data: {
+      type: 'form-element',
+      elementType: element.type,
+      label: element.label,
+      placeholder: element.placeholder,
+    },
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        zIndex: isDragging ? 1000 : 'auto',
+      }
+    : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={`
+        p-3 mb-2 bg-white border border-gray-200 rounded-lg cursor-grab active:cursor-grabbing
+        hover:border-blue-300 hover:shadow-sm transition-all duration-200
+        flex items-center space-x-2 group text-left
+        ${isDragging ? 'opacity-40' : 'hover:opacity-100'}
+      `}
+    >
+      <span className="w-4 h-4" dangerouslySetInnerHTML={{ __html: element.icon || '' }} />
+      <span className="text-xs font-medium text-gray-700 truncate">{element.label}</span>
+    </div>
+  );
+};
 
 const FormElementsPalette = ({ searchTerm = '' }) => {
   const [activeTab, setActiveTab] = useState('basic');
@@ -38,29 +77,6 @@ const FormElementsPalette = ({ searchTerm = '' }) => {
     color: ['color', 'colour', 'picker'],
   };
 
-  // Categorize fields from JSON
-  const categories = {
-    basic: [
-      'text', 'message', 'email', 'phone'
-    ],
-    contact: [
-      'name', 'firstName', 'lastName', 'company', 'jobTitle', 'website', 'address', 'city', 'post code', 'country'
-    ],
-    choices: [
-      'select', 'checkbox', 'radio', 'multiselect', 'rating', 'yesno', 'scale'
-    ],
-    advanced: [
-      'number', 'date', 'time', 'datetime', 'file', 'image', 'range', 'color'
-    ]
-  };
-
-  // Map fields to categories
-  const categorizedFields = Object.fromEntries(
-    Object.entries(categories).map(([cat, types]) => [
-      cat,
-      fields.filter(f => types.includes(f.type))
-    ])
-  );
 
   // Filter elements based on search term with enhanced matching
   const filterElements = (elements) => {
@@ -79,55 +95,10 @@ const FormElementsPalette = ({ searchTerm = '' }) => {
     });
   };
 
-  // Get filtered elements for current tab
-  const getFilteredElements = () => {
-    if (searchTerm) {
-      // If searching, show all matching elements regardless of tab
-      const allElements = fields;
-      return filterElements(allElements);
-    }
-    return categorizedFields[activeTab];
-  };
-
-  const filteredElements = getFilteredElements();
-
-  // Update tab counts based on search
-  const getTabCount = (category) => {
-    if (!searchTerm) return categorizedFields[category].length;
-    return filterElements(categorizedFields[category]).length;
-  };
-
-  const tabs = [
-    { id: 'basic', label: 'Basic', count: getTabCount('basic') },
-    { id: 'contact', label: 'Contact', count: getTabCount('contact') },
-    { id: 'choices', label: 'Choices', count: getTabCount('choices') },
-    { id: 'advanced', label: 'Advanced', count: getTabCount('advanced') },
-  ];
 
   // Only show a preview of fields from fields.json, no field data/state is stored here
   return (
     <div>
-      {/* Tabs - hide when searching */}
-      {!searchTerm && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`
-                px-2 py-1 text-xs font-medium rounded transition-colors
-                ${activeTab === tab.id 
-                  ? 'bg-blue-100 text-blue-700 border border-blue-200' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }
-              `}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Form Elements Grid */}
       <div className="grid grid-cols-2 gap-2">
         {fields
@@ -137,10 +108,7 @@ const FormElementsPalette = ({ searchTerm = '' }) => {
             (f.type || '').toLowerCase().includes(searchTerm.toLowerCase())
           )
           .map((element) => (
-            <div key={element.type} className="p-3 mb-2 bg-white border border-gray-200 rounded-lg flex items-center space-x-2">
-              <span className="w-4 h-4" dangerouslySetInnerHTML={{ __html: element.icon || '' }} />
-              <span className="text-xs font-medium text-gray-700 truncate">{element.label}</span>
-            </div>
+            <DraggableElement key={element.type} element={element} />
           ))}
       </div>
     </div>
