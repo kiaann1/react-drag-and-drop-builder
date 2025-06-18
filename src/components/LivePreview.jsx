@@ -201,15 +201,7 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
           </div>
         );
 
-      case 'hidden':
-        return (
-          <input
-            key={element.id}
-            type="hidden"
-            defaultValue={element.defaultValue}
-            className={element.customClass || ''}
-          />
-        );
+    
 
       case 'datetime':
         return (
@@ -222,55 +214,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
             )}
             <input
               type="datetime-local"
-              disabled={element.disabled}
-              defaultValue={element.defaultValue}
-              className={getFieldClasses()}
-            />
-            {element.helpText && (
-              <p className="mt-1 text-sm text-gray-500">{element.helpText}</p>
-            )}
-          </div>
-        );
-
-      case 'multiselect':
-        const multiselectOptionsSecond = getElementOptions();
-        return (
-          <div key={element.id} className={`mb-4 ${getContainerClasses()}`}>
-            {!element.hideLabel && (
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {element.label}
-                {element.required && <span className="text-red-500 ml-1">*</span>}
-              </label>
-            )}
-            <select 
-              multiple 
-              disabled={element.disabled}
-              className={`${getFieldClasses()} min-h-[120px]`}
-            >
-              {multiselectOptionsSecond.map((option, index) => (
-                <option key={index} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd to select multiple options</p>
-            {element.helpText && (
-              <p className="mt-1 text-sm text-gray-500">{element.helpText}</p>
-            )}
-          </div>
-        );
-
-      case 'time':
-        return (
-          <div key={element.id} className={`mb-4 ${getContainerClasses()}`}>
-            {!element.hideLabel && (
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {element.label}
-                {element.required && <span className="text-red-500 ml-1">*</span>}
-              </label>
-            )}
-            <input
-              type="time"
               disabled={element.disabled}
               defaultValue={element.defaultValue}
               className={getFieldClasses()}

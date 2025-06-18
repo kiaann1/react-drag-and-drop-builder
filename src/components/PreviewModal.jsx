@@ -155,14 +155,7 @@ const PreviewModal = ({ isOpen, onClose, formElements }) => {
           </div>
         );
 
-      case 'hidden':
-        return (
-          <input
-            key={element.id}
-            type="hidden"
-            {...fieldProps}
-          />
-        );
+    
 
       case 'paragraph':
         return (

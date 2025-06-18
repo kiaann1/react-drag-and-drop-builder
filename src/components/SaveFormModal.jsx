@@ -37,7 +37,6 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
       number: 'number',
       date: 'date',
       phone: 'tel',
-      hidden: 'hidden',
       select: 'select',
       checkbox: 'checkbox',
       radio: 'radio',
@@ -82,9 +81,6 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
           break;
         case 'file':
           fieldShortcode = `[file${required} ${name}]`;
-          break;
-        case 'hidden':
-          fieldShortcode = `[hidden ${name} "${element.defaultValue || ''}"]`;
           break;
         default:
           fieldShortcode = `[${cf7Type}${required} ${name} placeholder "${element.placeholder || element.label || ''}"]`;

@@ -43,16 +43,6 @@ const formElementCategories = {
         </svg>
       )
     },
-    { 
-      type: 'hidden', 
-      label: 'Hidden Field', 
-      placeholder: 'Hidden value',
-      icon: (
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-        </svg>
-      )
-    },
   ],
   contact: [
     { 
@@ -411,7 +401,6 @@ const FormElementsPalette = ({ searchTerm = '' }) => {
     city: ['city', 'town', 'municipality'],
     zipCode: ['zip code', 'zip', 'postal code', 'postcode'],
     country: ['country', 'nation', 'nationality'],
-    hidden: ['hidden', 'invisible', 'secret'],
     rating: ['rating', 'stars', 'review', 'score'],
     yesno: ['yes no', 'yes/no', 'boolean', 'true false'],
     scale: ['scale', 'range', 'numeric scale', '1-10'],
@@ -420,8 +409,6 @@ const FormElementsPalette = ({ searchTerm = '' }) => {
     image: ['image', 'photo', 'picture', 'img'],
     range: ['range', 'slider', 'min max'],
     color: ['color', 'colour', 'picker'],
-    signature: ['signature', 'sign', 'autograph', 'digital signature'],
-    captcha: ['captcha', 'verification', 'security', 'bot protection'],
   };
 
   // Filter elements based on search term with enhanced matching

@@ -95,12 +95,6 @@ const SortableFormElement = ({ element, onRemove, onUpdate }) => {
             disabled
           />
         );
-
-      case 'hidden':
-        return (
-          <div className="text-sm text-gray-500 italic">Hidden field (not visible to users)</div>
-        );
-
       case 'datetime':
         return (
           <input
