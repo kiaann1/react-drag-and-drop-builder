@@ -17,7 +17,11 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
   const generateJSON = () => {
     return JSON.stringify({
       name: formName,
-      elements: formElements,
+      // Ensure each element includes its conditionalLogic if present
+      elements: formElements.map(el => ({
+        ...el,
+        ...(el.conditionalLogic ? { conditionalLogic: el.conditionalLogic } : {})
+      })),
       formOptions: formOptions,
       metadata: {
         createdAt: new Date().toISOString(),
@@ -28,6 +32,15 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
     }, null, 2);
   };
 
+  // Helper to add conditionalLogic as a comment or data attribute for non-JSON exports
+  const getConditionalLogicComment = (el) =>
+    el.conditionalLogic
+      ? ` /* conditionalLogic: ${JSON.stringify(el.conditionalLogic)} */`
+      : '';
+
+  // --- Update all export formats to include conditional logic ---
+
+  // Example for WordPress Shortcode: add as HTML comment above each field
   const generateWordPressShortcode = () => {
     // Map builder types to CF7 shortcode types
     const cf7TypeMap = {
@@ -93,7 +106,11 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
         ? `<div style="font-size:12px;color:${formOptions.placeholderTextColor || '#9CA3AF'};margin-top:4px;">${element.helpText}</div>`
         : '';
 
-      return `<div style="margin-bottom:18px;">
+      const logicComment = element.conditionalLogic
+        ? `<!-- conditionalLogic: ${JSON.stringify(element.conditionalLogic)} -->\n`
+        : '';
+
+      return `${logicComment}<div style="margin-bottom:18px;">
   <label style="display:block;font-weight:500;color:${labelColor};margin-bottom:6px;">${element.label || name}${element.required ? ' *' : ''}</label>
   <span style="display:block;color:${inputTextColor};margin-bottom:2px;">${fieldShortcode}</span>
   ${helpText}
@@ -421,6 +438,10 @@ export default ${componentName};`;
       const required = element?.required ? 'required' : '';
       const showAsterisk = element?.required && formOptions.showRequiredAsterisk !== false;
       
+      const logicComment = element.conditionalLogic
+        ? `// conditionalLogic: ${JSON.stringify(element.conditionalLogic)}\n`
+        : '';
+
       switch (type) {
         case 'text':
         case 'email':
@@ -896,6 +917,7 @@ button:hover {
 </style>`;
   };
 
+  // Example for Bootstrap HTML: add as data attribute to each field
   const generateBootstrapHTML = () => {
     const htmlElements = formElements.map(element => {
       const required = element.required ? 'required' : '';
@@ -905,6 +927,10 @@ button:hover {
       const helpText = element.helpText;
       const showAsterisk = element.required && formOptions.showRequiredAsterisk !== false;
       
+      const logicAttr = element.conditionalLogic
+        ? ` data-conditional-logic='${JSON.stringify(element.conditionalLogic)}'`
+        : '';
+
       switch (element.type) {
         case 'text':
         case 'input':
@@ -938,10 +964,10 @@ button:hover {
                 ${element.min !== undefined ? `min="${element.min}"` : ''}
                 ${element.max !== undefined ? `max="${element.max}"` : ''}
                 ${element.step !== undefined ? `step="${element.step}"` : ''}
+                ${logicAttr}
             >
             ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
         </div>`;
-        
         case 'paragraph':
           return `        <div class="mb-3">
             <label for="${id}" class="form-label">${element.label}${showAsterisk ? ' <span class="text-danger">*</span>' : ''}</label>
@@ -954,31 +980,30 @@ button:hover {
                 ${required}
                 ${element.minLength ? `minlength="${element.minLength}"` : ''}
                 ${element.maxLength ? `maxlength="${element.maxLength}"` : ''}
+                ${logicAttr}
             >${element.defaultValue || ''}</textarea>
             ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
         </div>`;
-        
         case 'select':
           const options = element.options?.map(opt => 
             `                <option value="${opt.value}"${element.defaultValue === opt.value ? ' selected' : ''}>${opt.label}</option>`
           ).join('\n') || `                <option value="">No options available</option>`;
           return `        <div class="mb-3">
             <label for="${id}" class="form-label">${element.label}${showAsterisk ? ' <span class="text-danger">*</span>' : ''}</label>
-            <select class="form-select" id="${id}" name="${name}" ${required}>
+            <select class="form-select" id="${id}" name="${name}" ${required} ${logicAttr}>
                 <option value="">Choose...</option>
 ${options}
             </select>
             ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
         </div>`;
-        
         case 'checkbox':
           const checkboxOptions = element.options?.map((opt, index) => 
             `            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="${name}" id="${id}_${index}" value="${opt.value}">
+                <input class="form-check-input" type="checkbox" name="${name}" id="${id}_${index}" value="${opt.value}"${logicAttr}>
                 <label class="form-check-label" for="${id}_${index}">${opt.label}</label>
             </div>`
           ).join('\n') || `            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="${name}" id="${id}">
+                <input class="form-check-input" type="checkbox" name="${name}" id="${id}"${logicAttr}>
                 <label class="form-check-label" for="${id}">${element.label}</label>
             </div>`;
           return `        <div class="mb-3">
@@ -986,11 +1011,10 @@ ${options}
 ${checkboxOptions}
             ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
         </div>`;
-        
         case 'radio':
           const radioOptions = element.options?.map((opt, index) => 
             `            <div class="form-check">
-                <input class="form-check-input" type="radio" name="${name}" id="${id}_${index}" value="${opt.value}"${element.defaultValue === opt.value ? ' checked' : ''} ${required}>
+                <input class="form-check-input" type="radio" name="${name}" id="${id}_${index}" value="${opt.value}"${element.defaultValue === opt.value ? ' checked' : ''} ${required}${logicAttr}>
                 <label class="form-check-label" for="${id}_${index}">${opt.label}</label>
             </div>`
           ).join('\n') || '';
@@ -999,28 +1023,112 @@ ${checkboxOptions}
 ${radioOptions}
             ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
         </div>`;
-        
         case 'file':
         case 'image':
           return `        <div class="mb-3">
             <label for="${id}" class="form-label">${element.label}${showAsterisk ? ' <span class="text-danger">*</span>' : ''}</label>
-            <input type="file" class="form-control" id="${id}" name="${name}" ${required} ${element.type === 'image' ? 'accept="image/*"' : ''}>
+            <input type="file" class="form-control" id="${id}" name="${name}" ${required} ${element.type === 'image' ? 'accept="image/*"' : ''}${logicAttr}>
             ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
         </div>`;
-        
         case 'button':
-          return `        <button type="submit" class="btn btn-primary btn-lg w-100">${element.label}</button>`;
-        
+          return `        <button type="submit" class="btn btn-primary btn-lg w-100"${logicAttr}>${element.label}</button>`;
         default:
           return `        <div class="mb-3">
             <label for="${id}" class="form-label">${element.label}</label>
-            <input type="text" class="form-control" id="${id}" name="${name}" placeholder="${placeholder}">
+            <input type="text" class="form-control" id="${id}" name="${name}" placeholder="${placeholder}"${logicAttr}>
             ${helpText ? `<div class="form-text">${helpText}</div>` : ''}
         </div>`;
       }
     }).join('\n\n');
 
     const hasSubmitButton = formElements.some(el => el?.type === 'button');
+
+    // Add a script to handle conditional logic in the HTML export
+    const conditionalLogicScript = `
+<script>
+(function() {
+  function parseLogic(str) {
+    try { return JSON.parse(str); } catch { return null; }
+  }
+  function evaluateRule(rule, values) {
+    var value = values[rule.field];
+    switch (rule.operator) {
+      case 'equals': return value == rule.value;
+      case 'notEquals': return value != rule.value;
+      case 'contains': return value && value.includes && value.includes(rule.value);
+      case 'hasValue': return typeof value === 'string' ? value.trim().length > 0 : !!value;
+      case 'greaterThan': return parseFloat(value) > parseFloat(rule.value);
+      case 'lessThan': return parseFloat(value) < parseFloat(rule.value);
+      case 'isEmpty': return value === undefined || value === null || value === '';
+      case 'isNotEmpty': return !(value === undefined || value === null || value === '');
+      case 'startsWith': return value && value.startsWith && value.startsWith(rule.value);
+      case 'endsWith': return value && value.endsWith && value.endsWith(rule.value);
+      case 'matches': try { return value && new RegExp(rule.value).test(value); } catch { return false; }
+      case 'in': return value && rule.value.split(',').map(function(v){return v.trim();}).includes(value);
+      case 'notIn': return value && !rule.value.split(',').map(function(v){return v.trim();}).includes(value);
+      case 'checked': return value === true || value === 'on' || value === 'true';
+      case 'notChecked': return value === false || value === '' || value === undefined || value === null;
+      case 'true': return value === true || value === 'true';
+      case 'false': return value === false || value === 'false';
+      default: return false;
+    }
+  }
+  function getFormValues(form) {
+    var values = {};
+    Array.from(form.elements).forEach(function(el) {
+      if (!el.name) return;
+      if (el.type === 'checkbox') {
+        if (!values[el.name]) values[el.name] = [];
+        if (el.checked) values[el.name].push(el.value);
+      } else if (el.type === 'radio') {
+        if (el.checked) values[el.name] = el.value;
+      } else {
+        values[el.name] = el.value;
+      }
+    });
+    // For checkboxes, if only one value, flatten to string
+    Object.keys(values).forEach(function(k){
+      if (Array.isArray(values[k]) && values[k].length === 1) values[k] = values[k][0];
+    });
+    return values;
+  }
+  function applyConditionalLogic(form) {
+    var fields = form.querySelectorAll('[data-conditional-logic]');
+    var values = getFormValues(form);
+    fields.forEach(function(field) {
+      var logic = parseLogic(field.getAttribute('data-conditional-logic'));
+      if (!logic || !logic.rules || !logic.action) return;
+      var combinator = logic.combinator || 'AND';
+      var results = logic.rules.map(function(rule) { return evaluateRule(rule, values); });
+      var passed = combinator === 'AND' ? results.every(Boolean) : results.some(Boolean);
+      // Actions: show/hide/enable/disable/require/unrequire
+      var container = field.closest('.mb-3') || field.parentElement;
+      if (logic.action === 'show') {
+        if (container) container.style.display = passed ? '' : 'none';
+      } else if (logic.action === 'hide') {
+        if (container) container.style.display = passed ? 'none' : '';
+      } else if (logic.action === 'enable') {
+        field.disabled = !passed;
+      } else if (logic.action === 'disable') {
+        field.disabled = passed;
+      } else if (logic.action === 'require') {
+        field.required = passed;
+      } else if (logic.action === 'unrequire') {
+        field.required = !passed;
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('bootstrapForm');
+    if (!form) return;
+    function updateLogic() { applyConditionalLogic(form); }
+    form.addEventListener('input', updateLogic, true);
+    form.addEventListener('change', updateLogic, true);
+    updateLogic();
+  });
+})();
+</script>
+`;
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -1161,10 +1269,12 @@ ${!hasSubmitButton ? `                        <div class="d-grid mt-4">
             });
         });` : ''}
     </script>
+    ${conditionalLogicScript}
 </body>
 </html>`;
   };
 
+  // Example for Svelte: add as comment above each field in the #each loop
   const generateSvelteComponent = () => {
     // Basic Svelte component export (expand as needed for your form structure)
     return `<script>

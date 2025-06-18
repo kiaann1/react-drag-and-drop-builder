@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 
-// This component expects `formElements` to be the array of fields currently in the form builder (from FormBuilder state).
-// It does NOT use the palette/sidebar fields, only those that have been dragged into the form.
-
 const defaultRule = { field: '', operator: 'equals', value: '' };
 const ACTIONS = [
   { value: 'show', label: 'Show this field' },
