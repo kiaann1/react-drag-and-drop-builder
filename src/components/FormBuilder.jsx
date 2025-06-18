@@ -26,6 +26,7 @@ const FormBuilder = () => {
   const [formOptions, setFormOptions] = useState({});
   const [error, setError] = useState(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [selectedElement, setSelectedElement] = useState(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {

@@ -8,7 +8,7 @@ import FieldOptionsModal from './FieldOptionsModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import StarRating from './StarRating';
 
-const SortableFormElement = ({ element, onRemove, onUpdate }) => {
+const SortableFormElement = ({ element, onRemove, onUpdate, formElements }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLogicModal, setShowLogicModal] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
@@ -313,8 +313,9 @@ const SortableFormElement = ({ element, onRemove, onUpdate }) => {
       <ConditionalLogicModal
         isOpen={showLogicModal}
         onClose={() => setShowLogicModal(false)}
-        onSave={handleSaveLogic}
+        onChange={(logic) => onUpdate(element.id, { ...element, conditionalLogic: logic })}
         element={element}
+        formElements={formElements}
       />
 
       <FieldOptionsModal

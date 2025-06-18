@@ -2,12 +2,54 @@ import React, { useState, useCallback, useMemo } from 'react';
 import StarRating from './StarRating';
 import FormOptionsModal from './FormOptionsModal';
 
+// --- Add conditional logic evaluation utility ---
+function evaluateCondition(rule, formValues) {
+  const { field, operator, value } = rule;
+  const fieldValue = formValues[field];
+
+  switch (operator) {
+    case 'equals': return fieldValue == value;
+    case 'notEquals': return fieldValue != value;
+    case 'contains': return String(fieldValue ?? '').includes(value);
+    case 'greaterThan': return Number(fieldValue) > Number(value);
+    case 'lessThan': return Number(fieldValue) < Number(value);
+    case 'isEmpty': return !fieldValue || fieldValue === '';
+    case 'isNotEmpty': return !!fieldValue && fieldValue !== '';
+    case 'startsWith': return String(fieldValue ?? '').startsWith(value);
+    case 'endsWith': return String(fieldValue ?? '').endsWith(value);
+    case 'matches':
+      try { return new RegExp(value).test(fieldValue ?? ''); } catch { return false; }
+    case 'in':
+      return value.split(',').map(v => v.trim()).includes(fieldValue);
+    case 'notIn':
+      return !value.split(',').map(v => v.trim()).includes(fieldValue);
+    case 'checked': return fieldValue === true || fieldValue === 'true' || fieldValue === 1;
+    case 'notChecked': return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
+    case 'true': return fieldValue === true || fieldValue === 'true' || fieldValue === 1;
+    case 'false': return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
+    default: return true;
+  }
+}
+
+function evaluateLogic(conditionalLogic, formValues) {
+  if (!conditionalLogic || !conditionalLogic.rules || conditionalLogic.rules.length === 0) return true;
+  const { rules, combinator, action } = conditionalLogic;
+  const results = rules.map(rule => evaluateCondition(rule, formValues));
+  const passed = (combinator === 'OR' ? results.some(Boolean) : results.every(Boolean));
+  if (action === 'show') return passed;
+  if (action === 'hide') return !passed;
+  // For enable/disable/require/unrequire, always show, but you can add logic for those as needed
+  return true;
+}
+
 const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand, formOptions = {}, onUpdateFormOptions }) => {
   // Always call all hooks first, before any conditional logic
   const [colorValues, setColorValues] = useState({});
   const [rangeValues, setRangeValues] = useState({});
   const [showFormOptions, setShowFormOptions] = useState(false);
   const [error, setError] = useState('');
+  // --- Track form values for conditional logic ---
+  const [formValues, setFormValues] = useState({});
 
   // Validate and sanitize form elements
   const validateElement = useCallback((element) => {
@@ -65,9 +107,19 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
     return sanitizeFormOptions(formOptions);
   }, [formOptions, sanitizeFormOptions]);
 
+  // --- Update formValues on input change ---
+  const handleInputChange = useCallback((id, value) => {
+    setFormValues(prev => ({ ...prev, [id]: value }));
+  }, []);
+
   const renderPreviewElement = (element) => {
     // Add safety check for undefined elements
     if (!element || !element.type) {
+      return null;
+    }
+
+    // --- Conditional logic: skip rendering if logic fails ---
+    if (element.conditionalLogic && !evaluateLogic(element.conditionalLogic, formValues)) {
       return null;
     }
 
@@ -194,6 +246,7 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
                 ...getPlaceholderStyles(),
                 '--tw-ring-color': formOptions.inputFocusBorderColor || '#3B82F6',
               }}
+              onChange={e => handleInputChange(element.id, e.target.value)}
             />
             {element.helpText && (
               <p className="mt-1 text-sm text-gray-500">{element.helpText}</p>

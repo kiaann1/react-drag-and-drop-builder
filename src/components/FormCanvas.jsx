@@ -4,6 +4,8 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import SortableFormElement from './SortableFormElement';
 
 const FormCanvas = ({ formElements = [], onRemoveElement, onUpdateElement }) => {
+  // formElements here are the fields that have been dragged into the builder
+  // Pass this array to ConditionalLogicModal when opening it for a field
   const { isOver, setNodeRef } = useDroppable({
     id: 'form-canvas',
   });
@@ -50,6 +52,7 @@ const FormCanvas = ({ formElements = [], onRemoveElement, onUpdateElement }) => 
                       element={element}
                       onRemove={onRemoveElement}
                       onUpdate={onUpdateElement}
+                      formElements={formElements} // <-- Pass all form elements here
                     />
                   ))}
                 </SortableContext>
