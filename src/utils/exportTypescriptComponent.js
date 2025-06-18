@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 
 export function exportAsTypescriptComponent(formFields, formName = '', formOptions = {}) {
   const fieldsJsx = formFields.map(field => {
+    // Always include conditionalLogic as exported from ConditionalLogicModal
     const logicAttr = field.conditionalLogic
       ? `data-conditional-logic='${JSON.stringify(field.conditionalLogic)}'`
       : '';

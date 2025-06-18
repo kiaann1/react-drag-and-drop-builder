@@ -1,7 +1,7 @@
 export function exportAsHtml(formElements, formName = '', formOptions = {}, hexToRgb = () => '13, 110, 253') {
   // Build HTML for each field, including all settings and conditional logic as data attributes
   const htmlElements = formElements.map(element => {
-    // Only render field if not hidden by conditional logic (for static export, always include)
+    // Always include conditionalLogic as exported from ConditionalLogicModal
     const logicAttr = element.conditionalLogic
       ? ` data-conditional-logic='${JSON.stringify(element.conditionalLogic)}'`
       : '';

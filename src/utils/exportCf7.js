@@ -16,6 +16,10 @@ export function exportAsCf7(formElements, formOptions = {}) {
   };
 
   const fieldsCf7 = formElements.map(element => {
+    // Always include conditionalLogic as exported from ConditionalLogicModal
+    const logicComment = element.conditionalLogic
+      ? `<!-- conditionalLogic: ${JSON.stringify(element.conditionalLogic)} -->\n`
+      : '';
     const cf7Type = typeMap[element.type] || 'text';
     const required = element.required ? '*' : '';
     const name = element.id || 'field';
@@ -55,10 +59,6 @@ export function exportAsCf7(formElements, formOptions = {}) {
         fieldShortcode = `[${cf7Type}${required} ${name} placeholder "${element.placeholder || element.label || ''}"]`;
     }
 
-    // Add label, help text, and conditional logic as HTML comments
-    const logicComment = element.conditionalLogic
-      ? `<!-- conditionalLogic: ${JSON.stringify(element.conditionalLogic)} -->\n`
-      : '';
     const helpText = element.helpText
       ? `<div style="font-size:12px;color:${formOptions.placeholderTextColor || '#9CA3AF'};margin-top:4px;">${element.helpText}</div>`
       : '';

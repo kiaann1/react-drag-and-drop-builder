@@ -3,15 +3,14 @@ export function exportAsJson(formElements, formName = '', formOptions = {}) {
     name: formName,
     elements: formElements.map(el => ({
       ...el,
-      // Include all field settings and conditional logic
-      conditionalLogic: el.conditionalLogic || undefined,
+      // Always include conditionalLogic as exported from ConditionalLogicModal
+      conditionalLogic: el.conditionalLogic ? { ...el.conditionalLogic } : undefined,
       options: el.options || undefined,
       width: el.width || undefined,
       size: el.size || undefined,
       hideLabel: el.hideLabel || undefined,
       disabled: el.disabled || undefined,
       customClass: el.customClass || undefined,
-      // Any other field settings from EditFieldModal/FieldOptionsModal
       placeholder: el.placeholder || undefined,
       required: el.required || undefined,
       defaultValue: el.defaultValue || undefined,

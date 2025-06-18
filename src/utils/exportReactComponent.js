@@ -1,7 +1,7 @@
 export function exportAsReactComponent(formElements, formOptions = {}) {
   const fieldsJsx = formElements
     .map((field) => {
-      // Include all field settings and conditional logic as props/data attributes
+      // Always include conditionalLogic as exported from ConditionalLogicModal
       const logicAttr = field.conditionalLogic
         ? `data-conditional-logic='${JSON.stringify(field.conditionalLogic)}'`
         : '';
