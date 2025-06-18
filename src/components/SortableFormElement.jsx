@@ -85,7 +85,6 @@ const SortableFormElement = ({ element, onRemove, onUpdate }) => {
       case 'city':
       case 'zipCode':
       case 'website':
-      case 'password':
         return (
           <input
             id={element.id}

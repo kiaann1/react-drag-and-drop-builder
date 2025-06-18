@@ -43,7 +43,6 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
       radio: 'radio',
       file: 'file',
       input: 'text',
-      password: 'password',
       url: 'url',
     };
 
@@ -430,7 +429,6 @@ export default ${componentName};`;
         case 'text':
         case 'email':
         case 'phone':
-        case 'password':
         case 'company':
         case 'name':
         case 'firstName':
@@ -915,7 +913,6 @@ button:hover {
         case 'text':
         case 'input':
         case 'email':
-        case 'password':
         case 'phone':
         case 'number':
         case 'date':

@@ -167,7 +167,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
       case 'city':
       case 'zipCode':
       case 'website':
-      case 'password':
         return (
           <div key={element.id} className={`mb-4 ${getContainerClasses()}`}>
             {!element.hideLabel && (
