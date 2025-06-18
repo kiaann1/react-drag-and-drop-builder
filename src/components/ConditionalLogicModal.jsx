@@ -17,6 +17,7 @@ const OPERATORS = [
   { value: 'equals', label: 'Equals', input: 'text' },
   { value: 'notEquals', label: 'Not Equals', input: 'text' },
   { value: 'contains', label: 'Contains', input: 'text' },
+  { value: 'hasValue', label: 'Contains Any Characters/Numbers', input: null }, // <-- Added operator
   { value: 'greaterThan', label: 'Greater Than', input: 'number' },
   { value: 'lessThan', label: 'Less Than', input: 'number' },
   { value: 'isEmpty', label: 'Is Empty', input: null },
@@ -291,5 +292,35 @@ export default function ConditionalLogicModal({
 // This file only defines the modal UI and logic configuration.
 // The actual conditional logic (show/hide/enable/disable/require/unrequire fields based on rules)
 // must be implemented in your form rendering/preview logic (not in this modal).
+
+// To fix your live preview logic for "isEmpty" and "isNotEmpty":
+/*
+function evaluateRule(rule, formValues) {
+  const value = formValues[rule.field];
+  switch (rule.operator) {
+    case 'equals': return value == rule.value;
+    case 'notEquals': return value != rule.value;
+    case 'contains': return value && value.includes(rule.value);
+    case 'greaterThan': return parseFloat(value) > parseFloat(rule.value);
+    case 'lessThan': return parseFloat(value) < parseFloat(rule.value);
+    case 'isEmpty': return value === undefined || value === null || value === '';
+    case 'isNotEmpty': return !(value === undefined || value === null || value === '');
+    // ...other operators...
+    default: return false;
+  }
+}
+*/
+
+// For "isEmpty", the rule should only match if the value is exactly '', null, or undefined.
+// For "isNotEmpty", the rule should only match if the value is NOT '', null, or undefined.
+
+// If your preview logic uses `!value` for "isEmpty", it will treat `0` and `false` as empty, which is incorrect for text fields.
+// Use the above checks for correct behavior.
+
+// In your form rendering logic, implement "hasValue" as:
+/*
+case 'hasValue':
+  return typeof value === 'string' ? value.trim().length > 0 : !!value;
+*/
 
 
