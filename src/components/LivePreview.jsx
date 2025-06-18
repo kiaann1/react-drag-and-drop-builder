@@ -217,7 +217,8 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
       case 'jobTitle':
       case 'address':
       case 'city':
-      case 'zipCode':
+      case 'Post Code':
+      case 'message':
       case 'website':
         return (
           <div key={element.id} className={`mb-4 ${getContainerClasses()}`}>
