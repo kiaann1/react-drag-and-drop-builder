@@ -19,10 +19,53 @@ function evaluateCondition(rule, formValues) {
       return value.split(',').map(v => v.trim()).includes(fieldValue);
     case 'notIn':
       return !value.split(',').map(v => v.trim()).includes(fieldValue);
-    case 'checked': return fieldValue === true || fieldValue === 'true' || fieldValue === 1;
-    case 'notChecked': return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
-    case 'true': return fieldValue === true || fieldValue === 'true' || fieldValue === 1;
-    case 'false': return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
+    // --- Updated logic for isChecked and notChecked ---
+    case 'checked':
+    case 'isChecked':
+      if (Array.isArray(fieldValue)) {
+        if (value && value !== '') {
+          return fieldValue.includes(value);
+        }
+        return fieldValue.length > 0;
+      }
+      if (typeof fieldValue === 'string') {
+        if (value && value !== '') {
+          return fieldValue === value;
+        }
+        return !!fieldValue;
+      }
+      return fieldValue === true || fieldValue === 'true' || fieldValue === 1;
+    case 'notChecked':
+      if (Array.isArray(fieldValue)) {
+        if (value && value !== '') {
+          return !fieldValue.includes(value);
+        }
+        return fieldValue.length === 0;
+      }
+      if (typeof fieldValue === 'string') {
+        if (value && value !== '') {
+          return fieldValue !== value;
+        }
+        return !fieldValue;
+      }
+      return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
+    case 'true':
+    case 'isTrue':
+      if (Array.isArray(fieldValue)) {
+        if (value && value !== '') {
+          return fieldValue.includes(value);
+        }
+        return fieldValue.length > 0;
+      }
+      if (typeof fieldValue === 'string') {
+        if (value && value !== '') {
+          return fieldValue === value;
+        }
+        return !!fieldValue;
+      }
+      return fieldValue === true || fieldValue === 'true' || fieldValue === 1;
+    case 'false':
+      return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
     default: return true;
   }
 }

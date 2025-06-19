@@ -65,7 +65,7 @@ const SortableFormElement = ({ element, onRemove, onUpdate, formElements }) => {
         case 'multiselect':
         case 'checkbox':
           return [
-            { label: '', value: 'option1' },
+            { label: '', value: 'checked' },
           ];
         default:
           return [];

@@ -20,7 +20,7 @@ const FieldOptionsModal = ({ isOpen, onClose, onSave, element, onSwitchToEdit })
       case 'checkbox':
       case 'multiselect':
         return [
-          { label: '', value: 'option1' }
+          { label: '', value: 'checked' }
         ];
       default:
         return [];

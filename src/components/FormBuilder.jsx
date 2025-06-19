@@ -124,7 +124,7 @@ const FormBuilder = () => {
           defaultOptions = [{ label: 'Checkbox', value: 'checked' }];
           defaultLabel = 'Checkbox';
         } else if (['select', 'radio', 'multiselect'].includes(elementType)) {
-          defaultOptions = [{ label: 'Option 1', value: 'option1' }];
+          defaultOptions = [{ label: 'Option 1', value: 'checked' }];
           defaultLabel = 'Option 1';
         } else {
           // Capitalize first letter of type for label

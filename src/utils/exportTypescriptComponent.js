@@ -61,3 +61,59 @@ const ${formName || 'ExportedForm'}: FC = () => (
 export default ${formName || 'ExportedForm'};
 `;
 }
+
+// If you use conditional logic evaluation, update it:
+function evaluateCondition(rule, formValues) {
+  const { field, operator, value } = rule;
+  const fieldValue = formValues[field];
+
+  switch (operator) {
+    case 'equals': return fieldValue == value;
+    case 'notEquals': return fieldValue != value;
+    case 'contains': return String(fieldValue ?? '').includes(value);
+    case 'greaterThan': return Number(fieldValue) > Number(value);
+    case 'lessThan': return Number(fieldValue) < Number(value);
+    case 'isEmpty': return !fieldValue || fieldValue === '';
+    case 'isNotEmpty': return !!fieldValue && fieldValue !== '';
+    case 'startsWith': return String(fieldValue ?? '').startsWith(value);
+    case 'endsWith': return String(fieldValue ?? '').endsWith(value);
+    case 'matches':
+      try { return new RegExp(value).test(fieldValue ?? ''); } catch { return false; }
+    case 'in':
+      return value.split(',').map(v => v.trim()).includes(fieldValue);
+    case 'notIn':
+      return !value.split(',').map(v => v.trim()).includes(fieldValue);
+    case 'checked':
+    case 'isChecked':
+      if (Array.isArray(fieldValue)) {
+        if (value && value !== '') {
+          return fieldValue.includes(value);
+        }
+        return fieldValue.length > 0;
+      }
+      if (typeof fieldValue === 'string') {
+        if (value && value !== '') {
+          return fieldValue === value;
+        }
+        return !!fieldValue;
+      }
+      return fieldValue === true || fieldValue === 'true' || fieldValue === 1;
+    case 'notChecked':
+      if (Array.isArray(fieldValue)) {
+        if (value && value !== '') {
+          return !fieldValue.includes(value);
+        }
+        return fieldValue.length === 0;
+      }
+      if (typeof fieldValue === 'string') {
+        if (value && value !== '') {
+          return fieldValue !== value;
+        }
+        return !fieldValue;
+      }
+      return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
+    case 'true': return fieldValue === true || fieldValue === 'true' || fieldValue === 1;
+    case 'false': return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
+    default: return true;
+  }
+}
