@@ -112,6 +112,18 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
     setFormValues(prev => ({ ...prev, [id]: value }));
   }, []);
 
+  // For checkboxes (multiple selection)
+  const handleCheckboxChange = useCallback((id, value, checked) => {
+    setFormValues(prev => {
+      const prevValue = prev[id] || [];
+      if (checked) {
+        return { ...prev, [id]: [...prevValue, value] };
+      } else {
+        return { ...prev, [id]: prevValue.filter(v => v !== value) };
+      }
+    });
+  }, []);
+
   const renderPreviewElement = (element) => {
     // Add safety check for undefined elements
     if (!element || !element.type) {
@@ -188,18 +200,42 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
 
     // Get default options if none exist
     const getElementOptions = () => {
-      if (element.options && element.options.length > 0) {
-        return element.options;
+      if (element.type === 'checkbox') {
+        if (Array.isArray(element.options)) {
+          return element.options
+            .filter(opt => typeof opt.value !== 'undefined' && opt.value !== null && opt.value !== '')
+            .map((opt, idx) => ({
+              ...opt,
+              label:
+                typeof opt.label === 'string' && opt.label.trim() !== ''
+                  ? opt.label
+                  : `Checkbox ${idx + 1}`
+            }));
+        }
+        // Default for new checkbox fields
+        return [{ label: 'Checkbox 1', value: 'checked' }];
       }
-      // Default options for fields that should have them
+      if (Array.isArray(element.options) && element.options.length > 0) {
+        return element.options
+          .filter(opt => typeof opt.value !== 'undefined' && opt.value !== null && opt.value !== '')
+          .map((opt, idx) => ({
+            ...opt,
+            label: typeof opt.label === 'string' && opt.label.trim() !== ''
+              ? opt.label
+              : `Option ${idx + 1}`
+          }));
+      }
+      // Default options for new fields
       switch (element.type) {
         case 'select':
         case 'radio':
-        case 'checkbox':
         case 'multiselect':
           return [
             { label: 'Option 1', value: 'option1' },
-            { label: 'Option 2', value: 'option2' },
+          ];
+        case 'checkbox':
+          return [
+            { label: 'Checkbox 1', value: 'checked' }
           ];
         default:
           return [];
@@ -226,11 +262,11 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
               <label 
                 htmlFor={element.id} 
                 className="block text-sm font-medium mb-2"
-                style={getLabelStyles()}
+                style={{ color: formOptions.labelTextColor }}
               >
                 {element.label}
                 {element.required && formOptions.showRequiredAsterisk !== false && (
-                  <span className="text-red-500 ml-1">*</span>
+                  <span style={{ color: formOptions.requiredAsteriskColor }}>{formOptions.requiredAsterisk || '*'}</span>
                 )}
               </label>
             )}
@@ -589,11 +625,11 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
               <label 
                 htmlFor={element.id} 
                 className="block text-sm font-medium mb-2"
-                style={getLabelStyles()}
+                style={{ color: formOptions.labelTextColor }}
               >
                 {element.label}
                 {element.required && formOptions.showRequiredAsterisk !== false && (
-                  <span className="text-red-500 ml-1">*</span>
+                  <span style={{ color: formOptions.requiredAsteriskColor }}>{formOptions.requiredAsterisk || '*'}</span>
                 )}
               </label>
             )}
@@ -624,11 +660,11 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
               <label 
                 htmlFor={element.id} 
                 className="block text-sm font-medium mb-2"
-                style={getLabelStyles()}
+                style={{ color: formOptions.labelTextColor }}
               >
                 {element.label}
                 {element.required && formOptions.showRequiredAsterisk !== false && (
-                  <span className="text-red-500 ml-1">*</span>
+                  <span style={{ color: formOptions.requiredAsteriskColor }}>{formOptions.requiredAsterisk || '*'}</span>
                 )}
               </label>
             )}
@@ -663,11 +699,11 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
               <label 
                 htmlFor={element.id} 
                 className="block text-sm font-medium mb-2"
-                style={getLabelStyles()}
+                style={{ color: formOptions.labelTextColor }}
               >
                 {element.label}
                 {element.required && formOptions.showRequiredAsterisk !== false && (
-                  <span className="text-red-500 ml-1">*</span>
+                  <span style={{ color: formOptions.requiredAsteriskColor }}>{formOptions.requiredAsterisk || '*'}</span>
                 )}
               </label>
             )}
@@ -693,11 +729,11 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
               <label 
                 htmlFor={element.id} 
                 className="block text-sm font-medium mb-2"
-                style={getLabelStyles()}
+                style={{ color: formOptions.labelTextColor }}
               >
                 {element.label}
                 {element.required && formOptions.showRequiredAsterisk !== false && (
-                  <span className="text-red-500 ml-1">*</span>
+                  <span style={{ color: formOptions.requiredAsteriskColor }}>{formOptions.requiredAsterisk || '*'}</span>
                 )}
               </label>
             )}
@@ -723,11 +759,11 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
               <label 
                 htmlFor={element.id} 
                 className="block text-sm font-medium mb-2"
-                style={getLabelStyles()}
+                style={{ color: formOptions.labelTextColor }}
               >
                 {element.label}
                 {element.required && formOptions.showRequiredAsterisk !== false && (
-                  <span className="text-red-500 ml-1">*</span>
+                  <span style={{ color: formOptions.requiredAsteriskColor }}>{formOptions.requiredAsterisk || '*'}</span>
                 )}
               </label>
             )}
@@ -760,11 +796,11 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
               <label 
                 htmlFor={element.id} 
                 className="block text-sm font-medium mb-2"
-                style={getLabelStyles()}
+                style={{ color: formOptions.labelTextColor }}
               >
                 {element.label}
                 {element.required && formOptions.showRequiredAsterisk !== false && (
-                  <span className="text-red-500 ml-1">*</span>
+                  <span style={{ color: formOptions.requiredAsteriskColor }}>{formOptions.requiredAsterisk || '*'}</span>
                 )}
               </label>
             )}
@@ -791,6 +827,8 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
 
       case 'checkbox':
         const checkboxOptions = getElementOptions();
+        // Debug: log the options being rendered
+        console.log('Checkbox options for', element.id, checkboxOptions);
         return (
           <div key={element.id} className={`mb-4 ${getContainerClasses()}`}>
             {!element.hideLabel && (
@@ -810,6 +848,8 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
                     type="checkbox" 
                     value={option.value}
                     disabled={element.disabled}
+                    checked={Array.isArray(formValues[element.id]) ? formValues[element.id].includes(option.value) : false}
+                    onChange={e => handleCheckboxChange(element.id, option.value, e.target.checked)}
                     className={`rounded border-gray-300 text-blue-600 focus:ring-blue-500 ${element.customClass || ''}`}
                   />
                   <span className="ml-2 text-sm text-gray-700">{option.label}</span>
@@ -843,7 +883,8 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
                     type="radio" 
                     value={option.value}
                     disabled={element.disabled}
-                    defaultChecked={element.defaultValue === option.value}
+                    checked={formValues[element.id] === option.value}
+                    onChange={e => handleInputChange(element.id, option.value)}
                     className={`border-gray-300 text-blue-600 focus:ring-blue-500 ${element.customClass || ''}`}
                   />
                   <span className="ml-2 text-sm text-gray-700">{option.label}</span>
@@ -928,7 +969,10 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
             </div>
           ) : (
             <div className={`p-6 ${isExpanded ? 'max-w-4xl mx-auto' : ''}`}>
-              <form style={{ backgroundColor: formOptions.containerBackgroundColor || '#F9FAFB' }}>
+              <form
+                key={JSON.stringify(formElements)} // <--- Add this line
+                style={{ backgroundColor: formOptions.containerBackgroundColor || '#F9FAFB' }}
+              >
                 {formOptions.formTitle && (
                   <div className="mb-6">
                     <h2 className="text-2xl font-bold text-gray-900">{formOptions.formTitle}</h2>
@@ -953,7 +997,9 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
                     e.target.style.backgroundColor = formOptions.submitButtonColor || '#3B82F6';
                   }}
                 >
-                  {formOptions.submitButtonText || 'Submit Form'}
+                  {(formOptions.submitButtonText && formOptions.submitButtonText.trim() !== '')
+                    ? formOptions.submitButtonText
+                    : 'Submit'}
                 </button>
               </form>
             </div>
@@ -975,3 +1021,4 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
 LivePreview.displayName = 'LivePreview';
 
 export default LivePreview;
+

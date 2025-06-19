@@ -57,7 +57,6 @@ const FormOptionsModal = ({ isOpen, onClose, onSave, formOptions }) => {
     { id: 'general', label: 'General', icon: '⚙️' },
     { id: 'behavior', label: 'Behavior', icon: '🔧' },
     { id: 'validation', label: 'Validation', icon: '✅' },
-    { id: 'export', label: 'Export', icon: '📤' },
   ];
 
   // Always render the component, but conditionally show it
@@ -121,6 +120,16 @@ const FormOptionsModal = ({ isOpen, onClose, onSave, formOptions }) => {
                 className="flex-1 p-2 border border-gray-300 rounded text-sm"
               />
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Button Text</label>
+            <input
+              type="text"
+              value={options.submitButtonText}
+              onChange={(e) => updateOption('submitButtonText', e.target.value)}
+              placeholder="Submit"
+              className="w-full p-2 border border-gray-300 rounded text-sm"
+            />
           </div>
         </div>
       </div>
@@ -397,53 +406,6 @@ const FormOptionsModal = ({ isOpen, onClose, onSave, formOptions }) => {
     </div>
   );
 
-  const renderExportTab = () => (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Export Format</label>
-        <select
-          value={options.exportFormat}
-          onChange={(e) => updateOption('exportFormat', e.target.value)}
-          className="w-full p-2 border border-gray-300 rounded"
-        >
-          <option value="html">HTML + CSS + JavaScript</option>
-          <option value="react">React Component</option>
-          <option value="vue">Vue Component</option>
-          <option value="json">JSON Schema</option>
-          <option value="embed">Embed Code</option>
-        </select>
-      </div>
-      <div className="space-y-3">
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={options.includeValidation}
-            onChange={(e) => updateOption('includeValidation', e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <span className="ml-2 text-sm text-gray-700">Include validation scripts</span>
-        </label>
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={options.includeStyling}
-            onChange={(e) => updateOption('includeStyling', e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <span className="ml-2 text-sm text-gray-700">Include custom styling</span>
-        </label>
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={options.generateUniqueIds}
-            onChange={(e) => updateOption('generateUniqueIds', e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          <span className="ml-2 text-sm text-gray-700">Generate unique field IDs</span>
-        </label>
-      </div>
-    </div>
-  );
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -451,7 +413,6 @@ const FormOptionsModal = ({ isOpen, onClose, onSave, formOptions }) => {
       case 'general': return renderGeneralTab();
       case 'behavior': return renderBehaviorTab();
       case 'validation': return renderValidationTab();
-      case 'export': return renderExportTab();
       default: return renderStylingTab();
     }
   };

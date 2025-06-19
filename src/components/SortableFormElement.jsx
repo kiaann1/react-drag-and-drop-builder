@@ -59,20 +59,33 @@ const SortableFormElement = ({ element, onRemove, onUpdate, formElements }) => {
       if (element.options && element.options.length > 0) {
         return element.options;
       }
-      // Default options for fields that should have them
       switch (element.type) {
         case 'select':
         case 'radio':
-        case 'checkbox':
         case 'multiselect':
+        case 'checkbox':
           return [
-            { label: 'Option 1', value: 'option1' },
-            { label: 'Option 2', value: 'option2' },
+            { label: '', value: 'option1' },
           ];
         default:
           return [];
       }
     };
+
+    // Render for checkbox type
+    if (element.type === 'checkbox') {
+      // Always render a single checkbox, regardless of options length
+      return (
+        <label className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            className="border-gray-300"
+            disabled
+          />
+          <span className="text-gray-700 text-sm">{element.label || "Checkbox"}</span>
+        </label>
+      );
+    }
 
     switch (element.type) {
       case 'text':
@@ -283,8 +296,9 @@ const SortableFormElement = ({ element, onRemove, onUpdate, formElements }) => {
               className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 p-1 rounded transition-all"
               title="Logic"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path>
+              {/* Changed to a sliders/settings icon to differentiate from edit */}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16M9 6v12m6-6v6" />
               </svg>
             </button>
             <button

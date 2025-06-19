@@ -4,6 +4,9 @@ import fields from '../../fields.json';
 
 // Draggable preview for each field
 const DraggableElement = ({ element }) => {
+  // Ensure label fallback for elements missing label
+  const label = element.label || element.name || element.type || "Field";
+
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `palette-${element.type}`,
     data: {
@@ -35,82 +38,85 @@ const DraggableElement = ({ element }) => {
       `}
     >
       <span className="w-4 h-4" dangerouslySetInnerHTML={{ __html: element.icon || '' }} />
-      <span className="text-xs font-medium text-gray-700 truncate">{element.label}</span>
+      <span className="text-xs font-medium text-gray-700 truncate">{label}</span>
     </div>
   );
 };
 
 const FormElementsPalette = ({ searchTerm = '' }) => {
-  const [activeTab, setActiveTab] = useState('basic');
+  const [openCategory, setOpenCategory] = useState(null);
 
-  // Enhanced search terms mapping for better discoverability
-  const searchTerms = {
-    text: ['text', 'input', 'field', 'string'],
-    paragraph: ['paragraph', 'para', 'textarea', 'text area', 'multiline', 'multi line'],
-    email: ['email', 'e-mail', 'mail', 'address'],
-    phone: ['phone', 'telephone', 'tel', 'mobile', 'number'],
-    name: ['name', 'full name', 'first name', 'last name'],
-    company: ['company', 'organization', 'business', 'org'],
-    address: ['address', 'location', 'street', 'addr'],
-    website: ['website', 'url', 'link', 'web', 'site'],
-    select: ['select', 'dropdown', 'drop down', 'drop-down', 'choice', 'option'],
-    checkbox: ['checkbox', 'check box', 'check boxes', 'checkboxes', 'check', 'boxes', 'tick', 'multiple choice'],
-    radio: ['radio', 'radio button', 'radio buttons', 'single choice', 'option button'],
-    multiselect: ['multiselect', 'multi select', 'multi-select', 'multiple select', 'multiple choice'],
-    number: ['number', 'numeric', 'integer', 'decimal', 'num'],
-    date: ['date', 'calendar', 'day', 'month', 'year'],
-    time: ['time', 'hour', 'minute', 'clock'],
-    file: ['file', 'upload', 'attachment', 'document', 'doc'],
-    firstName: ['first name', 'firstname', 'given name', 'forename'],
-    lastName: ['last name', 'lastname', 'surname', 'family name'],
-    jobTitle: ['job title', 'position', 'role', 'occupation', 'title'],
-    city: ['city', 'town', 'municipality'],
-    zipCode: ['zip code', 'zip', 'postal code', 'postcode'],
-    country: ['country', 'nation', 'nationality'],
-    rating: ['rating', 'stars', 'review', 'score'],
-    yesno: ['yes no', 'yes/no', 'boolean', 'true false'],
-    scale: ['scale', 'range', 'numeric scale', '1-10'],
-    like: ['like', 'agreement scale', 'strongly agree'],
-    datetime: ['datetime', 'date time', 'timestamp'],
-    image: ['image', 'photo', 'picture', 'img'],
-    range: ['range', 'slider', 'min max'],
-    color: ['color', 'colour', 'picker'],
-  };
+  // Group fields by category (ensure each field in fields.json has a 'category' property)
+  const categories = Array.from(
+    fields.reduce((map, item) => {
+      const cat = item.category || "Other";
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat).push(item);
+      return map;
+    }, new Map())
+  );
 
-
-  // Filter elements based on search term with enhanced matching
+  // Filter elements based on search term
   const filterElements = (elements) => {
     if (!searchTerm) return elements;
-
     const searchLower = searchTerm.toLowerCase().trim();
-
-    return elements.filter(element => {
-      if ((element.label || '').toLowerCase().includes(searchLower)) return true;
-      if ((element.type || '').toLowerCase().includes(searchLower)) return true;
-      if (element.aliases && element.aliases.some(term =>
-        term.toLowerCase().includes(searchLower) ||
-        searchLower.includes(term.toLowerCase())
-      )) return true;
-      return false;
-    });
+    return elements.filter(element =>
+      (element.label || '').toLowerCase().includes(searchLower) ||
+      (element.type || '').toLowerCase().includes(searchLower)
+    );
   };
 
-
-  // Only show a preview of fields from fields.json, no field data/state is stored here
   return (
     <div>
-      {/* Form Elements Grid */}
-      <div className="grid grid-cols-2 gap-2">
-        {fields
-          .filter(f =>
-            !searchTerm ||
-            (f.label || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (f.type || '').toLowerCase().includes(searchTerm.toLowerCase())
-          )
-          .map((element) => (
-            <DraggableElement key={element.type} element={element} />
-          ))}
-      </div>
+      {/* Accordion for each category */}
+      {categories.map(([category, items]) => (
+              <div
+                key={category}
+                style={{
+                  marginBottom: 16,
+                  borderRadius: 10,
+                  boxShadow: openCategory === category
+                    ? "0 4px 16px 0 rgba(37,99,235,0.10)"
+                    : "0 1px 4px 0 rgba(0,0,0,0.04)",
+                  border: openCategory === category
+                    ? "2px solid #2563eb"
+                    : "1px solid #e5e7eb",
+                  background: openCategory === category
+                    ? "linear-gradient(90deg,#e0e7ff 0%,#f0f6ff 100%)"
+                    : "#f8fafc",
+                  transition: "all 0.2s"
+                }}
+              >
+          <button
+            type="button"
+            onClick={() => setOpenCategory(openCategory === category ? null : category)}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              padding: "8px 12px",
+              background: "none",
+              border: "none",
+              outline: "none",
+              fontWeight: 600,
+              cursor: "pointer",
+              borderRadius: 6,
+            }}
+            aria-expanded={openCategory === category}
+          >
+            {category}
+            <span style={{ float: "right", fontWeight: 400 }}>
+              {openCategory === category ? "▲" : "▼"}
+            </span>
+          </button>
+          {openCategory === category && (
+            <div className="grid grid-cols-2 gap-2 p-2">
+              {filterElements(items).map((element) => (
+                <DraggableElement key={element.type} element={element} />
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 };

@@ -13,8 +13,33 @@ const FieldOptionsModal = ({ isOpen, onClose, onSave, element, onSwitchToEdit })
     options: [],
   });
 
+  const getDefaultOptions = (type) => {
+    switch (type) {
+      case 'select':
+      case 'radio':
+      case 'checkbox':
+      case 'multiselect':
+        return [
+          { label: '', value: 'option1' }
+        ];
+      default:
+        return [];
+    }
+  };
+
   useEffect(() => {
     if (element) {
+      // Always use the latest options from element
+      let options = Array.isArray(element.options) ? [...element.options] : getDefaultOptions(element.type);
+      // If the first option label is empty, use the field label as a placeholder
+      if (
+        ['select', 'radio', 'checkbox', 'multiselect'].includes(element.type) &&
+        element.label &&
+        options.length > 0 &&
+        (!options[0].label || options[0].label.trim() === '')
+      ) {
+        options[0] = { ...options[0], label: element.label };
+      }
       setOptionsData({
         width: element.width || 'full',
         size: element.size || 'medium',
@@ -24,51 +49,45 @@ const FieldOptionsModal = ({ isOpen, onClose, onSave, element, onSwitchToEdit })
         conditionalLogic: element.conditionalLogic || false,
         conditionalField: element.conditionalField || '',
         conditionalValue: element.conditionalValue || '',
-        options: element.options || getDefaultOptions(element.type),
+        options,
       });
     }
-  }, [element]);
-
-  const getDefaultOptions = (type) => {
-    switch (type) {
-      case 'select':
-      case 'radio':
-      case 'checkbox':
-        return [
-          { label: 'Option 1', value: 'option1' },
-          { label: 'Option 2', value: 'option2' },
-        ];
-      default:
-        return [];
-    }
-  };
+  }, [element, element.options, element.label]);
 
   if (!isOpen || !element) return null;
 
   const handleSave = () => {
     // Ensure the id is included in the saved data
-    onSave(element.id, { ...optionsData, id: element.id, type: element.type });
+    // Always pass a new array for options to trigger React updates
+    if (onSave) {
+      onSave(element.id, { ...optionsData, id: element.id, type: element.type, options: [...optionsData.options] });
+    }
     onClose();
   };
 
   const addOption = () => {
-    setOptionsData({
-      ...optionsData,
-      options: [...optionsData.options, { label: `Option ${optionsData.options.length + 1}`, value: `option${optionsData.options.length + 1}` }]
-    });
+    setOptionsData(prev => ({
+      ...prev,
+      options: [
+        ...prev.options,
+        { label: '', value: `option${prev.options.length + 1}` }
+      ]
+    }));
   };
 
   const removeOption = (index) => {
-    setOptionsData({
-      ...optionsData,
-      options: optionsData.options.filter((_, i) => i !== index)
-    });
+    setOptionsData(prev => ({
+      ...prev,
+      options: prev.options.filter((_, i) => i !== index)
+    }));
   };
 
   const updateOption = (index, field, value) => {
-    const newOptions = [...optionsData.options];
-    newOptions[index] = { ...newOptions[index], [field]: value };
-    setOptionsData({ ...optionsData, options: newOptions });
+    setOptionsData(prev => {
+      const newOptions = [...prev.options];
+      newOptions[index] = { ...newOptions[index], [field]: value };
+      return { ...prev, options: newOptions };
+    });
   };
 
   const hasOptions = ['select', 'radio', 'checkbox', 'multiselect'].includes(element.type);

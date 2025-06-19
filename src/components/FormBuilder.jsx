@@ -118,17 +118,27 @@ const FormBuilder = () => {
       if (active.id.startsWith('palette-')) {
         // Adding new element from palette
         const elementType = active.id.replace('palette-', '');
+        let defaultOptions = [];
+        let defaultLabel = '';
+        if (elementType === 'checkbox') {
+          defaultOptions = [{ label: 'Checkbox', value: 'checked' }];
+          defaultLabel = 'Checkbox';
+        } else if (['select', 'radio', 'multiselect'].includes(elementType)) {
+          defaultOptions = [{ label: 'Option 1', value: 'option1' }];
+          defaultLabel = 'Option 1';
+        } else {
+          // Capitalize first letter of type for label
+          defaultLabel = elementType.charAt(0).toUpperCase() + elementType.slice(1);
+        }
         const newElement = {
           id: `element-${Date.now()}`,
           type: elementType,
-          label: elementType.charAt(0).toUpperCase() + elementType.slice(1),
+          label: defaultLabel,
           required: false,
           placeholder: '',
           helpText: '',
           defaultValue: '',
-          options: ['select', 'radio', 'checkbox', 'multiselect'].includes(elementType) 
-            ? [{ label: 'Option 1', value: 'option1' }, { label: 'Option 2', value: 'option2' }] 
-            : [],
+          options: defaultOptions,
         };
 
         const validatedElement = validateElementData(newElement);
@@ -286,32 +296,7 @@ const FormBuilder = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header onSave={handleSave} />
-      
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mx-4 mt-4">
-          <div className="flex">
-            <div className="py-1">
-              <svg className="fill-current h-4 w-4 text-red-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                <path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z"/>
-              </svg>
-            </div>
-            <div>
-              <p className="font-bold">Error</p>
-              <p className="text-sm">{error}</p>
-            </div>
-            <div className="ml-auto">
-              <button
-                onClick={() => setError(null)}
-                className="text-red-500 hover:text-red-700"
-              >
-                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+    
       
       <DndContext
         sensors={sensors}
