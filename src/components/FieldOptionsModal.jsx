@@ -27,32 +27,33 @@ const FieldOptionsModal = ({ isOpen, onClose, onSave, element, onSwitchToEdit })
     }
   };
 
+  // Fix: Avoid accessing element.options if element is null
   useEffect(() => {
-    if (element) {
-      // Always use the latest options from element
-      let options = Array.isArray(element.options) ? [...element.options] : getDefaultOptions(element.type);
-      // If the first option label is empty, use the field label as a placeholder
-      if (
-        ['select', 'radio', 'checkbox', 'multiselect'].includes(element.type) &&
-        element.label &&
-        options.length > 0 &&
-        (!options[0].label || options[0].label.trim() === '')
-      ) {
-        options[0] = { ...options[0], label: element.label };
-      }
-      setOptionsData({
-        width: element.width || 'full',
-        size: element.size || 'medium',
-        hideLabel: element.hideLabel || false,
-        disabled: element.disabled || false,
-        customClass: element.customClass || '',
-        conditionalLogic: element.conditionalLogic || false,
-        conditionalField: element.conditionalField || '',
-        conditionalValue: element.conditionalValue || '',
-        options,
-      });
+    if (!element) return; // Prevent null access
+
+    // Always use the latest options from element
+    let options = Array.isArray(element.options) ? [...element.options] : getDefaultOptions(element?.type);
+    // If the first option label is empty, use the field label as a placeholder
+    if (
+      ['select', 'radio', 'checkbox', 'multiselect'].includes(element.type) &&
+      element.label &&
+      options.length > 0 &&
+      (!options[0].label || options[0].label.trim() === '')
+    ) {
+      options[0] = { ...options[0], label: element.label };
     }
-  }, [element, element.options, element.label]);
+    setOptionsData({
+      width: element.width || 'full',
+      size: element.size || 'medium',
+      hideLabel: element.hideLabel || false,
+      disabled: element.disabled || false,
+      customClass: element.customClass || '',
+      conditionalLogic: element.conditionalLogic || false,
+      conditionalField: element.conditionalField || '',
+      conditionalValue: element.conditionalValue || '',
+      options,
+    });
+  }, [element, element?.options, element?.label]);
 
   if (!isOpen || !element) return null;
 

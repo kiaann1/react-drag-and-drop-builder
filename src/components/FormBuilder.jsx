@@ -174,25 +174,22 @@ const FormBuilder = () => {
         throw new Error('Invalid element ID');
       }
 
-      const validatedData = validateElementData(updatedData);
-      
+      // No validation here, just update the element with new data (including options)
       setFormElements(prevElements => {
         const elementExists = prevElements.some(element => element.id === id);
         if (!elementExists) {
           throw new Error('Element not found');
         }
-        
         return prevElements.map(element =>
-          element.id === id ? { ...element, ...validatedData } : element
+          element.id === id ? { ...element, ...updatedData } : element
         );
       });
-      
       setError(null);
     } catch (err) {
       console.error('Update element error:', err);
       setError(err.message || 'Failed to update form element');
     }
-  }, [validateElementData]);
+  }, []);
 
   const removeElement = useCallback((id) => {
     try {

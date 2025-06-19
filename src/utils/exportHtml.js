@@ -123,9 +123,7 @@ export function exportAsHtml(formElements, formName = '', formOptions = {}, hexT
     }
   }).join('\n\n');
 
-  // ...existing code for conditionalLogicScript (see SaveFormModal.jsx generateBootstrapHTML for full logic)...
 
-  // Return the full HTML string as in SaveFormModal.jsx, using formOptions for styling
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

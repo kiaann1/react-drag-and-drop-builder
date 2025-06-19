@@ -1,16 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import SortableFormElement from './SortableFormElement';
+import FieldOptionsModal from './FieldOptionsModal';
 
-const FormCanvas = ({ formElements = [], onRemoveElement, onUpdateElement }) => {
-  // formElements here are the fields that have been dragged into the builder
-  // Pass this array to ConditionalLogicModal when opening it for a field
+const FormCanvas = ({
+  formElements,
+  onRemoveElement,
+  onUpdateElement,
+}) => {
   const { isOver, setNodeRef } = useDroppable({
     id: 'form-canvas',
   });
 
   const validElements = formElements.filter(element => element && element.id);
+
+  const [optionsModalOpen, setOptionsModalOpen] = useState(false);
+  const [optionsModalElement, setOptionsModalElement] = useState(null);
+
+  // Open the options modal for a field
+  const openOptionsModal = (element) => {
+    setOptionsModalElement(element);
+    setOptionsModalOpen(true);
+  };
+
+  // Save handler for FieldOptionsModal that updates the field in formElements
+  const handleFieldOptionsSave = (id, updatedData) => {
+    if (onUpdateElement) {
+      onUpdateElement(id, updatedData);
+    }
+  };
 
   return (
     <div className="w-full h-full bg-gray-100">
@@ -61,6 +80,13 @@ const FormCanvas = ({ formElements = [], onRemoveElement, onUpdateElement }) => 
           )}
         </div>
       </div>
+      <FieldOptionsModal
+        isOpen={optionsModalOpen}
+        onClose={() => setOptionsModalOpen(false)}
+        onSave={handleFieldOptionsSave}
+        element={optionsModalElement}
+        onSwitchToEdit={() => setOptionsModalOpen(false)}
+      />
     </div>
   );
 };
