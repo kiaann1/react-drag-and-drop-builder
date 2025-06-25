@@ -18,6 +18,7 @@ import Sidebar from './Sidebar';
 import FormCanvas from './FormCanvas';
 import LivePreview from './LivePreview';
 import SaveFormModal from './SaveFormModal';
+import TemplatesModal from './TemplatesModal';
 
 const FormBuilder = () => {
   const [formElements, setFormElements] = useState([]);
@@ -26,6 +27,7 @@ const FormBuilder = () => {
   const [formOptions, setFormOptions] = useState({});
   const [error, setError] = useState(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [selectedElement, setSelectedElement] = useState(null);
 
   const sensors = useSensors(
@@ -287,12 +289,38 @@ const FormBuilder = () => {
     }
   }, []);
 
+  const handleOpenTemplates = useCallback(() => {
+    setShowTemplatesModal(true);
+  }, []);
+
+  const handleSelectTemplate = useCallback((templateFields) => {
+    try {
+      if (!Array.isArray(templateFields)) {
+        throw new Error('Invalid template fields');
+      }
+
+      // Validate each template field
+      const validatedFields = templateFields.map(field => validateElementData(field));
+      
+      // Replace current form elements with template fields
+      setFormElements(validatedFields);
+      setShowTemplatesModal(false);
+      setError(null);
+      
+      // Optionally show a success message
+      console.log('Template applied successfully');
+    } catch (err) {
+      console.error('Select template error:', err);
+      setError(err.message || 'Failed to apply template');
+    }
+  }, [validateElementData]);
+
   // Memoize expensive operations
   const memoizedFormElements = useMemo(() => formElements, [formElements]);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header onSave={handleSave} />
+      <Header onSave={handleSave} onOpenTemplates={handleOpenTemplates} />
     
       
       <DndContext
@@ -342,6 +370,12 @@ const FormBuilder = () => {
         onClose={() => setShowSaveModal(false)}
         formElements={memoizedFormElements}
         formOptions={formOptions}
+      />
+
+      <TemplatesModal
+        isOpen={showTemplatesModal}
+        onClose={() => setShowTemplatesModal(false)}
+        onSelectTemplate={handleSelectTemplate}
       />
     </div>
   );
