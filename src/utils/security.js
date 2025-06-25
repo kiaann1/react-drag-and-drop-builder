@@ -14,6 +14,152 @@ export const sanitizeHtml = (input) => {
     .replace(/\//g, '&#x2F;');
 };
 
+// CSV/Excel injection prevention - sanitize data for export formats
+export const sanitizeForExport = (value, format = 'csv') => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  let sanitized = String(value);
+
+  // First apply HTML sanitization
+  sanitized = sanitizeHtml(sanitized);
+
+  // Prevent formula injection attacks in spreadsheet applications
+  // Excel, Google Sheets, and other apps interpret cells starting with certain characters as formulas
+  const formulaStarters = /^[=+\-@\t\r]/;
+  if (formulaStarters.test(sanitized)) {
+    // Prefix with single quote to force text interpretation
+    sanitized = "'" + sanitized;
+  }
+
+  // Remove potentially dangerous control characters
+  sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
+  // Format-specific sanitization
+  if (format === 'csv') {
+    // Escape double quotes by doubling them (CSV standard)
+    sanitized = sanitized.replace(/"/g, '""');
+    
+    // Wrap in quotes if contains CSV special characters
+    if (sanitized.includes(',') || sanitized.includes('\n') || sanitized.includes('\r') || sanitized.includes('"')) {
+      sanitized = `"${sanitized}"`;
+    }
+  } else if (format === 'excel') {
+    // Excel has a 32,767 character limit per cell
+    if (sanitized.length > 32767) {
+      sanitized = sanitized.substring(0, 32767);
+    }
+  }
+
+  return sanitized;
+};
+
+// Additional sanitization for user-generated content in exports
+export const sanitizeUserContent = (content) => {
+  if (typeof content !== 'string') return content;
+
+  return content
+    // Remove script tags and javascript: URLs
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/javascript:/gi, 'blocked:')
+    .replace(/vbscript:/gi, 'blocked:')
+    .replace(/data:text\/html/gi, 'blocked:')
+    
+    // Remove potentially dangerous attributes
+    .replace(/on\w+\s*=/gi, 'blocked=')
+    
+    // Remove dangerous CSS
+    .replace(/expression\s*\(/gi, 'blocked(')
+    .replace(/behavior\s*:/gi, 'blocked:')
+    
+    // Limit length to prevent DoS
+    .slice(0, 10000);
+};
+
+// Validate export data for suspicious content
+export const validateExportData = (data, format = 'csv') => {
+  const errors = [];
+  const warnings = [];
+
+  if (!data) {
+    errors.push('No data provided for export');
+    return { isValid: false, errors, warnings };
+  }
+
+  // Convert data to string for analysis
+  const dataString = typeof data === 'string' ? data : JSON.stringify(data);
+
+  // Check for formula injection patterns
+  const suspiciousPatterns = [
+    { pattern: /^[=+\-@]/m, message: 'Potential formula injection detected' },
+    { pattern: /<script/i, message: 'Script tag detected' },
+    { pattern: /javascript:/i, message: 'JavaScript URL detected' },
+    { pattern: /vbscript:/i, message: 'VBScript URL detected' },
+    { pattern: /data:.*base64/i, message: 'Base64 data URL detected' },
+    { pattern: /expression\s*\(/i, message: 'CSS expression detected' },
+  ];
+
+  suspiciousPatterns.forEach(({ pattern, message }) => {
+    if (pattern.test(dataString)) {
+      warnings.push(message);
+    }
+  });
+
+  // Check for excessively long content (potential DoS)
+  const maxLength = format === 'excel' ? 32767 : 1000000; // Excel cell limit vs general CSV limit
+  if (dataString.length > maxLength) {
+    errors.push(`Content exceeds maximum length for ${format} format`);
+  }
+
+  // Check for suspicious repeated patterns (potential DoS)
+  const repeatedPattern = /(.{10,})\1{50,}/;
+  if (repeatedPattern.test(dataString)) {
+    warnings.push('Repeated content pattern detected (potential DoS)');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+};
+
+// Rate limiter specifically for export operations
+export const createExportRateLimiter = () => {
+  return createRateLimiter(5, 60000); // 5 exports per minute
+};
+
+// Generate secure export token to prevent unauthorized downloads
+export const generateExportToken = () => {
+  const timestamp = Date.now();
+  const randomBytes = new Uint8Array(16);
+  crypto.getRandomValues(randomBytes);
+  const randomString = Array.from(randomBytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  
+  return `${timestamp}-${randomString}`;
+};
+
+// Validate export token (basic implementation)
+export const validateExportToken = (token, maxAge = 300000) => { // 5 minutes default
+  if (!token || typeof token !== 'string') {
+    return false;
+  }
+
+  const parts = token.split('-');
+  if (parts.length !== 2) {
+    return false;
+  }
+
+  const timestamp = parseInt(parts[0], 10);
+  if (isNaN(timestamp)) {
+    return false;
+  }
+
+  const age = Date.now() - timestamp;
+  return age <= maxAge;
+};
+
 // Validate CSS class names
 export const validateCssClass = (className) => {
   if (typeof className !== 'string') return false;

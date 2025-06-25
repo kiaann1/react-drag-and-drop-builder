@@ -22,6 +22,7 @@
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.58.0",
     "tailwindcss": "^4.1.10",
+    "xlsx": "^0.18.5",
     "yup": "^1.6.1"
   },
   "devDependencies": {

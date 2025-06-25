@@ -38,7 +38,7 @@
 
 ## 9. Export/Download Submissions
 - [ ] Allow only authorized users to export/download form submissions.
-- [ ] Sanitize export data to prevent injection/XSS in CSV, Excel, etc.
+- [x] Sanitize export data to prevent injection/XSS in CSV, Excel, etc.
 
 ## 10. Accessibility & Usability
 - [ ] Ensure submit button is accessible (keyboard, screen readers).

@@ -5,13 +5,18 @@ import { exportAsHtml } from '../utils/exportHtml';
 import { exportAsReactComponent } from '../utils/exportReactComponent';
 import { exportAsTypescriptComponent } from '../utils/exportTypescriptComponent';
 import { exportAsCf7 } from '../utils/exportCf7';
+import { exportFormAsCsv, downloadCsv, createSafeFilename } from '../utils/exportCsv';
+import { exportFormAsExcel, exportFormAsExcelFallback } from '../utils/exportExcel';
+import { validateExportData, createExportRateLimiter } from '../utils/security';
 
 const exportFormats = [
   { value: 'json', label: 'JSON Data' },
   { value: 'react', label: 'React Component' },
   { value: 'typescript', label: 'TypeScript Component' },
   { value: 'wordpress', label: 'WordPress Shortcode' },
-  { value: 'css-framework', label: 'HTML + Bootstrap' }
+  { value: 'css-framework', label: 'HTML + Bootstrap' },
+  { value: 'csv', label: 'CSV Spreadsheet' },
+  { value: 'excel', label: 'Excel Workbook' }
 ];
 
 const getFileExtension = (selectedFormat) => {
@@ -20,7 +25,9 @@ const getFileExtension = (selectedFormat) => {
     json: 'json',
     typescript: 'tsx',
     react: 'jsx',
-    wordpress: 'txt'
+    wordpress: 'txt',
+    csv: 'csv',
+    excel: 'xlsx'
   };
   return extensions[selectedFormat] || 'txt';
 };
@@ -29,10 +36,14 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
   const [formName, setFormName] = useState(formOptions.formTitle || '');
   const [selectedFormat, setSelectedFormat] = useState('html');
   const [copied, setCopied] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
   const codeRef = useRef(null);
+  const exportRateLimiter = useRef(createExportRateLimiter());
 
   useEffect(() => {
     setCopied(false);
+    setExportError('');
   }, [isOpen, selectedFormat, formName, formElements]);
 
   // Generate export code based on selected format
@@ -48,6 +59,10 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
         return exportAsTypescriptComponent(formElements, formName, formOptions);
       case 'css-framework':
         return exportAsHtml(formElements, formName, formOptions, hexToRgb);
+      case 'csv':
+        return exportFormAsCsv(formElements, formName, formOptions);
+      case 'excel':
+        return 'Excel files are downloaded directly. Click "Download Export" to generate the file.';
       default:
         return exportAsJson(formElements, formName, formOptions);
     }
@@ -59,7 +74,32 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
       alert('Please enter a form name before copying.');
       return;
     }
+
+    // Check rate limiting
+    if (!exportRateLimiter.current.isAllowed()) {
+      setExportError('Too many export attempts. Please wait a moment before trying again.');
+      return;
+    }
+
+    // CSV and Excel files should be downloaded, not copied
+    if (selectedFormat === 'csv' || selectedFormat === 'excel') {
+      await handleDownloadExport();
+      return;
+    }
+
     const code = generateCode();
+    
+    // Validate export data for security
+    const validation = validateExportData(code, selectedFormat);
+    if (!validation.isValid) {
+      setExportError(`Export validation failed: ${validation.errors.join(', ')}`);
+      return;
+    }
+
+    if (validation.warnings.length > 0) {
+      console.warn('Export warnings:', validation.warnings);
+    }
+
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(code);
@@ -80,10 +120,60 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
         document.body.removeChild(textarea);
       }
       setCopied(true);
+      setExportError('');
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       setCopied(false);
-      alert('Failed to copy to clipboard.');
+      setExportError('Failed to copy to clipboard.');
+    }
+  };
+
+  // Handle download export for CSV and Excel files
+  const handleDownloadExport = async () => {
+    if (!formName.trim()) {
+      setExportError('Please enter a form name before exporting.');
+      return;
+    }
+
+    // Check rate limiting
+    if (!exportRateLimiter.current.isAllowed()) {
+      setExportError('Too many export attempts. Please wait a moment before trying again.');
+      return;
+    }
+
+    setIsExporting(true);
+    setExportError('');
+
+    try {
+      if (selectedFormat === 'csv') {
+        const csvContent = exportFormAsCsv(formElements, formName, formOptions);
+        
+        // Validate CSV data
+        const validation = validateExportData(csvContent, 'csv');
+        if (!validation.isValid) {
+          throw new Error(`CSV export validation failed: ${validation.errors.join(', ')}`);
+        }
+
+        const filename = createSafeFilename(formName, 'form');
+        downloadCsv(csvContent, filename);
+        
+      } else if (selectedFormat === 'excel') {
+        try {
+          await exportFormAsExcel(formElements, formName, formOptions);
+        } catch (error) {
+          console.warn('Excel export failed, using fallback:', error);
+          exportFormAsExcelFallback(formElements, formName, formOptions);
+        }
+      }
+
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+
+    } catch (error) {
+      console.error('Export failed:', error);
+      setExportError(`Export failed: ${error.message}`);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -152,7 +242,16 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
                 <p className="font-medium mb-1">Elements in form: {formElements.length}</p>
                 <p>Selected format: {exportFormats.find(f => f.value === selectedFormat)?.label}</p>
                 <p>File extension: .{getFileExtension(selectedFormat)}</p>
+                {(selectedFormat === 'csv' || selectedFormat === 'excel') && (
+                  <p className="text-blue-600 mt-2">📊 This format will download as a file</p>
+                )}
               </div>
+              {exportError && (
+                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
+                  <p className="font-medium">Export Error:</p>
+                  <p>{exportError}</p>
+                </div>
+              )}
               <div className="flex gap-2 mt-4">
                 <button
                   onClick={handleSave}
@@ -187,17 +286,47 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
                     style={{ minWidth: 60, textAlign: 'center' }}
                     aria-live="polite"
                   >
-                    Copied
+                    {selectedFormat === 'csv' || selectedFormat === 'excel' ? 'Downloaded' : 'Copied'}
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleCopyToClipboard}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    disabled={!formName.trim()}
-                    tabIndex={0}
-                  >
-                    Copy to Clipboard
-                  </button>
+                  <div className="flex gap-2 mt-4">
+                    {selectedFormat === 'csv' || selectedFormat === 'excel' ? (
+                      <button
+                        type="button"
+                        onClick={handleDownloadExport}
+                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={!formName.trim() || isExporting}
+                        tabIndex={0}
+                      >
+                        {isExporting ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Exporting...
+                          </>
+                        ) : (
+                          'Download Export'
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleCopyToClipboard}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                        disabled={!formName.trim()}
+                        tabIndex={0}
+                      >
+                        Copy to Clipboard
+                      </button>
+                    )}
+                    <button
+                      onClick={onClose}
+                      className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

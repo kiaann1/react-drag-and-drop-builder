@@ -48,6 +48,8 @@ A powerful, intuitive drag-and-drop form builder built with React, featuring rea
 - **Svelte Component**: Svelte code export
 - **JSON Schema**: Form structure data
 - **WordPress Shortcode**: Export for WordPress/Contact Form 7
+- **CSV Spreadsheet**: Secure CSV export with injection prevention
+- **Excel Workbook**: Native Excel files with XSS protection
 - **Embed Code**: iframe integration
 
 ---
