@@ -1,13 +1,25 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 import FormElementsPalette from './FormElementsPalette';
 
 const Sidebar = ({ onReset }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleReset = () => {
-    if (window.confirm('Are you sure you want to clear all form fields? This action cannot be undone.')) {
-      onReset();
-    }
+    Swal.fire({
+      title: 'Clear all fields?',
+      text: 'Are you sure you want to clear all form fields? This action cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, clear all',
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        onReset();
+      }
+    });
   };
 
   return (

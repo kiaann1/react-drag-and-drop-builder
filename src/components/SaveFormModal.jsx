@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Swal from 'sweetalert2';
 import hexToRgb from '../utils/hexToRgb';
 import { exportAsJson } from '../utils/exportJson';
 import { exportAsHtml } from '../utils/exportHtml';
@@ -71,7 +72,12 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
   // Copy to clipboard
   const handleCopyToClipboard = async () => {
     if (!formName.trim()) {
-      alert('Please enter a form name before copying.');
+      Swal.fire({
+        title: 'Form name required',
+        text: 'Please enter a form name before copying.',
+        icon: 'warning',
+        confirmButtonColor: '#3b82f6'
+      });
       return;
     }
 
@@ -122,9 +128,26 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
       setCopied(true);
       setExportError('');
       setTimeout(() => setCopied(false), 2000);
+      
+      // Show success toast
+      Swal.fire({
+        title: 'Copied!',
+        text: 'Code copied to clipboard successfully.',
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        toast: true,
+        position: 'top-end'
+      });
     } catch (err) {
       setCopied(false);
       setExportError('Failed to copy to clipboard.');
+      Swal.fire({
+        title: 'Copy Failed',
+        text: 'Failed to copy to clipboard. Please try again.',
+        icon: 'error',
+        confirmButtonColor: '#ef4444'
+      });
     }
   };
 
@@ -180,7 +203,12 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
   // Save to localStorage
   const handleSave = () => {
     if (!formName.trim()) {
-      alert('Please enter a form name before saving.');
+      Swal.fire({
+        title: 'Form name required',
+        text: 'Please enter a form name before saving.',
+        icon: 'warning',
+        confirmButtonColor: '#3b82f6'
+      });
       return;
     }
     const savedForms = JSON.parse(localStorage.getItem('savedForms') || '[]');
@@ -191,7 +219,16 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
       createdAt: new Date().toISOString(),
     });
     localStorage.setItem('savedForms', JSON.stringify(savedForms));
-    alert('Form saved successfully!');
+    
+    Swal.fire({
+      title: 'Success!',
+      text: 'Form saved successfully!',
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top-end'
+    });
     onClose();
   };
 

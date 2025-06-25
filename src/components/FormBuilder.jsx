@@ -12,6 +12,7 @@ import {
   arrayMove,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
+import Swal from 'sweetalert2';
 
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -221,11 +222,29 @@ const FormBuilder = () => {
         return;
       }
 
-      if (window.confirm('Are you sure you want to reset the form? This will remove all fields.')) {
-        setFormElements([]);
-        setFormOptions({});
-        setError(null);
-      }
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'This will remove all fields. This action cannot be undone!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, reset form',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          setFormElements([]);
+          setFormOptions({});
+          setError(null);
+          Swal.fire({
+            title: 'Reset Complete!',
+            text: 'Your form has been cleared.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+      });
     } catch (err) {
       console.error('Reset error:', err);
       setError('Failed to reset form');
@@ -299,21 +318,57 @@ const FormBuilder = () => {
         throw new Error('Invalid template fields');
       }
 
-      // Validate each template field
-      const validatedFields = templateFields.map(field => validateElementData(field));
-      
-      // Replace current form elements with template fields
-      setFormElements(validatedFields);
-      setShowTemplatesModal(false);
-      setError(null);
-      
-      // Optionally show a success message
-      console.log('Template applied successfully');
+      // If there are existing form elements, ask for confirmation
+      if (formElements.length > 0) {
+        Swal.fire({
+          title: 'Replace current form?',
+          text: 'This will replace all current form fields with the selected template. Do you want to continue?',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#3b82f6',
+          cancelButtonColor: '#6b7280',
+          confirmButtonText: 'Yes, use template',
+          cancelButtonText: 'Cancel'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            applyTemplate();
+          }
+        });
+      } else {
+        applyTemplate();
+      }
+
+      function applyTemplate() {
+        // Validate each template field
+        const validatedFields = templateFields.map(field => validateElementData(field));
+        
+        // Replace current form elements with template fields (clear existing and set new)
+        setFormElements(validatedFields);
+        setShowTemplatesModal(false);
+        setError(null);
+        
+        // Show success message
+        Swal.fire({
+          title: 'Template Applied!',
+          text: `Successfully loaded template with ${validatedFields.length} fields.`,
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+        
+        console.log('Template applied successfully - replaced', formElements.length, 'existing fields with', validatedFields.length, 'template fields');
+      }
     } catch (err) {
       console.error('Select template error:', err);
       setError(err.message || 'Failed to apply template');
+      Swal.fire({
+        title: 'Error!',
+        text: err.message || 'Failed to apply template',
+        icon: 'error',
+        confirmButtonColor: '#ef4444'
+      });
     }
-  }, [validateElementData]);
+  }, [validateElementData, formElements.length]);
 
   // Memoize expensive operations
   const memoizedFormElements = useMemo(() => formElements, [formElements]);
