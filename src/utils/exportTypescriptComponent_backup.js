@@ -52,55 +52,91 @@ function splitIntoSteps(formElements) {
   };
 }
 
-export function exportAsJson(formElements, formName = '', formOptions = {}) {
-  const { steps, isWizard } = splitIntoSteps(formElements);
-  
-  const cleanElement = (el) => ({
-    ...el,
-    // Always include conditionalLogic as exported from ConditionalLogicModal
-    conditionalLogic: el.conditionalLogic ? { ...el.conditionalLogic } : undefined,
-    options: el.options || undefined,
-    width: el.width || undefined,
-    size: el.size || undefined,
-    hideLabel: el.hideLabel || undefined,
-    disabled: el.disabled || undefined,
-    customClass: el.customClass || undefined,
-    placeholder: el.placeholder || undefined,
-    required: el.required || undefined,
-    defaultValue: el.defaultValue || undefined,
-    minLength: el.minLength || undefined,
-    maxLength: el.maxLength || undefined,
-    min: el.min || undefined,
-    max: el.max || undefined,
-    step: el.step || undefined,
-    pattern: el.pattern || undefined,
-    helpText: el.helpText || undefined,
-    label: el.label || undefined,
-    type: el.type,
-    id: el.id,
-  });
+export function exportAsTypescriptComponent(formFields, formName = '', formOptions = {}) {
+  const { steps, isWizard } = splitIntoSteps(formFields);
 
-  return JSON.stringify({
-    name: formName,
-    isWizard,
-    elements: formElements.map(cleanElement),
-    // Include wizard structure if it's a multi-step form
-    ...(isWizard && {
-      wizardSteps: steps.map(step => ({
-        ...step,
-        fields: step.fields.map(cleanElement)
-      }))
-    }),
-    formOptions: { ...formOptions },
-    metadata: {
-      createdAt: new Date().toISOString(),
-      version: '2.0', // Updated version to indicate wizard support
-      totalElements: formElements.length,
-      requiredElements: formElements.filter(el => el?.required).length,
-      totalSteps: steps.length,
-      pageBreakCount: formElements.filter(el => el.type === 'pageBreak').length,
-    },
-  }, null, 2);
+  // TypeScript interfaces
+  const generateInterfaces = () => `
+interface FormData {
+  [key: string]: string | number | boolean | string[];
+}
+
+interface FormFieldProps {
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  formData: FormData;
+}
+
+${isWizard ? `
+interface WizardStepProps {
+  formData: FormData;
+  onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+}
+` : ''}`;
+
+  const generateFieldJsx = (field) => {
+    // Always include conditionalLogic as exported from ConditionalLogicModal
+    const logicAttr = field.conditionalLogic
+      ? `data-conditional-logic='${JSON.stringify(field.conditionalLogic)}'`
+      : '';
+    const required = field.required ? 'required' : '';
+    const placeholder = field.placeholder || field.label || '';
+    const helpText = field.helpText ? `<div className="form-text">${field.helpText}</div>` : '';
+    const customClass = field.customClass ? ` ${field.customClass}` : '';
+    const disabled = field.disabled ? 'disabled' : '';
+    const label = field.label || field.id || '';
+    const id = field.id || '';
+    const name = field.id || '';
+    
+    // Skip pageBreak elements
+    if (field.type === 'pageBreak') {
+      return '';
+    }
+    switch (field.type) {
+      case 'text':
+      case 'email':
+      case 'phone':
+      case 'name':
+      case 'firstName':
+      case 'lastName':
+      case 'company':
+      case 'jobTitle':
+      case 'address':
+      case 'city':
+      case 'zipCode':
+      case 'website':
+        return `<div key="${id}" className="mb-3">
+  <label htmlFor="${id}" className="form-label">${label}${field.required ? ' *' : ''}</label>
+  <input
+    type="${field.type === 'website' ? 'url' : field.type === 'phone' ? 'tel' : 'text'}"
+    className={"form-control${customClass}"}
+    id="${id}"
+    name="${name}"
+    placeholder="${placeholder}"
+    ${required} ${disabled}
+    defaultValue={${JSON.stringify(field.defaultValue || '')}}
+    minLength={${field.minLength || 'undefined'}}
+    maxLength={${field.maxLength || 'undefined'}}
+    ${logicAttr}
+  />
+  ${helpText}
+</div>`;
+      // Add more cases as needed for other field types...
+      default:
+        return '';
+    }
+  }).join('\n    ');
+
+  return `import React, { FC } from 'react';
+
+const ${formName || 'ExportedForm'}: FC = () => (
+  <form>
+    ${fieldsJsx}
+    <button type="submit" className="btn btn-primary">${formOptions.submitButtonText || 'Submit Form'}</button>
+  </form>
+);
+
+export default ${formName || 'ExportedForm'};
+`;
 }
 
 // If you use conditional logic evaluation, update it:

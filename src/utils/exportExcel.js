@@ -6,6 +6,60 @@
 
 import { sanitizeHtml } from './security.js';
 
+// Helper function to split form elements into wizard steps
+function splitIntoSteps(formElements) {
+  if (!formElements || formElements.length === 0) {
+    return { steps: [], isWizard: false };
+  }
+
+  const steps = [];
+  let currentStep = {
+    id: 'step-0',
+    title: 'Step 1',
+    description: '',
+    fields: []
+  };
+
+  formElements.forEach((element) => {
+    if (element.type === 'pageBreak') {
+      // Complete current step if it has fields
+      if (currentStep.fields.length > 0) {
+        steps.push(currentStep);
+      }
+      
+      // Start new step
+      currentStep = {
+        id: `step-${steps.length}`,
+        title: element.label || `Step ${steps.length + 2}`,
+        description: element.helpText || '',
+        fields: []
+      };
+    } else {
+      currentStep.fields.push(element);
+    }
+  });
+
+  // Add the last step if it has fields
+  if (currentStep.fields.length > 0) {
+    steps.push(currentStep);
+  }
+
+  // If no page breaks found, treat entire form as single step
+  if (steps.length === 0 && formElements.length > 0) {
+    steps.push({
+      id: 'step-0',
+      title: 'Form',
+      description: '',
+      fields: formElements.filter(el => el.type !== 'pageBreak')
+    });
+  }
+
+  return { 
+    steps, 
+    isWizard: steps.length > 1
+  };
+}
+
 /**
  * Sanitizes data for Excel export to prevent formula injection and XSS
  * @param {any} value - The value to sanitize
@@ -78,13 +132,14 @@ export const createSafeWorksheetName = (name) => {
 };
 
 /**
- * Converts form elements to Excel workbook data structure
+ * Converts form elements to Excel workbook data structure with wizard support
  * @param {Array} formElements - Array of form elements
  * @param {string} formName - Name of the form
  * @param {Object} formOptions - Form configuration options
  * @returns {Object} - Excel workbook data structure
  */
 export const prepareFormDataForExcel = (formElements, formName = '', formOptions = {}) => {
+  const { steps, isWizard } = splitIntoSteps(formElements);
   const worksheetName = createSafeWorksheetName(formName || 'Form Structure');
 
   // Create headers
@@ -100,70 +155,105 @@ export const prepareFormDataForExcel = (formElements, formName = '', formOptions
     'Help Text',
     'Width',
     'Custom Class',
-    'Conditional Logic'
+    'Conditional Logic',
+    'Wizard Step',
+    'Step Title'
   ];
 
-  // Create data rows
-  const rows = formElements.map(element => [
-    sanitizeForExcel(element.id || ''),
-    sanitizeForExcel(element.type || ''),
-    sanitizeForExcel(element.label || ''),
-    element.required ? 'Yes' : 'No',
-    sanitizeForExcel(element.placeholder || ''),
-    sanitizeForExcel(element.defaultValue || ''),
-    sanitizeForExcel(element.options ? JSON.stringify(element.options, null, 2) : ''),
-    sanitizeForExcel([
-      element.minLength ? `Min Length: ${element.minLength}` : '',
-      element.maxLength ? `Max Length: ${element.maxLength}` : '',
-      element.pattern ? `Pattern: ${element.pattern}` : '',
-      element.min !== undefined ? `Min: ${element.min}` : '',
-      element.max !== undefined ? `Max: ${element.max}` : '',
-      element.step !== undefined ? `Step: ${element.step}` : ''
-    ].filter(Boolean).join('\n')),
-    sanitizeForExcel(element.helpText || ''),
-    sanitizeForExcel(element.width || 'full'),
-    sanitizeForExcel(element.customClass || ''),
-    sanitizeForExcel(element.conditionalLogic ? JSON.stringify(element.conditionalLogic, null, 2) : '')
-  ]);
+  // Create rows
+  const rows = [];
+  
+  if (isWizard) {
+    // Export with wizard structure
+    steps.forEach((step, stepIndex) => {
+      step.fields.forEach(element => {
+        rows.push([
+          sanitizeForExcel(element.id || ''),
+          sanitizeForExcel(element.type || ''),
+          sanitizeForExcel(element.label || ''),
+          sanitizeForExcel(element.required ? 'Yes' : 'No'),
+          sanitizeForExcel(element.placeholder || ''),
+          sanitizeForExcel(element.defaultValue || ''),
+          sanitizeForExcel(element.options ? JSON.stringify(element.options) : ''),
+          sanitizeForExcel([
+            element.minLength ? `Min Length: ${element.minLength}` : '',
+            element.maxLength ? `Max Length: ${element.maxLength}` : '',
+            element.pattern ? `Pattern: ${element.pattern}` : '',
+            element.min ? `Min: ${element.min}` : '',
+            element.max ? `Max: ${element.max}` : '',
+            element.step ? `Step: ${element.step}` : ''
+          ].filter(Boolean).join('; ')),
+          sanitizeForExcel(element.helpText || ''),
+          sanitizeForExcel(element.width || 'full'),
+          sanitizeForExcel(element.customClass || ''),
+          sanitizeForExcel(element.conditionalLogic ? JSON.stringify(element.conditionalLogic) : ''),
+          sanitizeForExcel(stepIndex + 1),
+          sanitizeForExcel(step.title)
+        ]);
+      });
+    });
+  } else {
+    // Export single-step form (original behavior)
+    formElements.forEach(element => {
+      if (element.type !== 'pageBreak') {
+        rows.push([
+          sanitizeForExcel(element.id || ''),
+          sanitizeForExcel(element.type || ''),
+          sanitizeForExcel(element.label || ''),
+          sanitizeForExcel(element.required ? 'Yes' : 'No'),
+          sanitizeForExcel(element.placeholder || ''),
+          sanitizeForExcel(element.defaultValue || ''),
+          sanitizeForExcel(element.options ? JSON.stringify(element.options) : ''),
+          sanitizeForExcel([
+            element.minLength ? `Min Length: ${element.minLength}` : '',
+            element.maxLength ? `Max Length: ${element.maxLength}` : '',
+            element.pattern ? `Pattern: ${element.pattern}` : '',
+            element.min ? `Min: ${element.min}` : '',
+            element.max ? `Max: ${element.max}` : '',
+            element.step ? `Step: ${element.step}` : ''
+          ].filter(Boolean).join('; ')),
+          sanitizeForExcel(element.helpText || ''),
+          sanitizeForExcel(element.width || 'full'),
+          sanitizeForExcel(element.customClass || ''),
+          sanitizeForExcel(element.conditionalLogic ? JSON.stringify(element.conditionalLogic) : ''),
+          sanitizeForExcel(1),
+          sanitizeForExcel('Single Step Form')
+        ]);
+      }
+    });
+  }
 
-  // Create metadata rows
-  const metadata = [
-    ['Form Name', sanitizeForExcel(formName)],
-    ['Export Date', new Date()],
-    ['Total Fields', formElements.length],
-    ['Required Fields', formElements.filter(el => el.required).length],
-    ['Form Title', sanitizeForExcel(formOptions.formTitle || '')],
-    ['Form Description', sanitizeForExcel(formOptions.formDescription || '')],
-    [], // Empty row
-  ];
+  // Combine all data
+  const worksheetData = [headers, ...rows];
 
-  // Combine metadata, headers, and data
-  const worksheetData = [
-    ...metadata,
-    headers,
-    ...rows
-  ];
+  // Create metadata
+  const metadata = {
+    formName: sanitizeForExcel(formName),
+    formType: isWizard ? 'Multi-Step Wizard' : 'Single Step',
+    totalSteps: steps.length,
+    exportedAt: new Date().toISOString(),
+    totalFields: formElements.filter(el => el.type !== 'pageBreak').length,
+    pageBreakCount: formElements.filter(el => el.type === 'pageBreak').length,
+    version: '2.0'
+  };
 
   return {
     worksheetName,
-    data: worksheetData,
-    metadata: {
-      formName: sanitizeForExcel(formName),
-      exportDate: new Date(),
-      totalFields: formElements.length,
-      requiredFields: formElements.filter(el => el.required).length
-    }
+    worksheetData,
+    metadata,
+    isWizard,
+    steps: isWizard ? steps : []
   };
 };
-
 /**
- * Converts form submission data to Excel workbook data structure
+ * Converts form submission data to Excel workbook data structure with wizard support
  * @param {Array} submissions - Array of form submissions
  * @param {Array} formElements - Array of form elements for headers
  * @param {string} formName - Name of the form
  * @returns {Object} - Excel workbook data structure
  */
 export const prepareSubmissionsDataForExcel = (submissions, formElements, formName = '') => {
+  const { steps, isWizard } = splitIntoSteps(formElements);
   const worksheetName = createSafeWorksheetName(formName || 'Form Submissions');
 
   if (!submissions || submissions.length === 0) {
@@ -172,32 +262,46 @@ export const prepareSubmissionsDataForExcel = (submissions, formElements, formNa
       data: [
         ['No submissions found'],
         ['Form Name', sanitizeForExcel(formName)],
+        ['Form Type', isWizard ? 'Multi-Step Wizard' : 'Single Step'],
+        ['Total Steps', steps.length],
         ['Export Date', new Date()]
       ],
       metadata: {
         formName: sanitizeForExcel(formName),
         exportDate: new Date(),
-        totalSubmissions: 0
+        totalSubmissions: 0,
+        isWizard,
+        totalSteps: steps.length
       }
     };
   }
 
-  // Create headers from form elements
-  const fieldHeaders = formElements.map(element => 
+  // Create headers from form elements (excluding pageBreak fields)
+  const formFields = formElements.filter(el => el.type !== 'pageBreak');
+  const fieldHeaders = formFields.map(element => 
     sanitizeForExcel(element.label || element.id || 'Unknown Field')
   );
+  
+  // Add step information if it's a wizard
+  const stepHeaders = isWizard ? ['Step Number', 'Step Title'] : [];
   const metaHeaders = ['Submission Date', 'Submission ID', 'IP Address', 'User Agent'];
-  const headers = [...fieldHeaders, ...metaHeaders];
+  const headers = [...fieldHeaders, ...stepHeaders, ...metaHeaders];
 
   // Create data rows from submissions
   const rows = submissions.map(submission => {
-    const fieldValues = formElements.map(element => {
+    const fieldValues = formFields.map(element => {
       const value = submission.data?.[element.id];
       if (Array.isArray(value)) {
         return sanitizeForExcel(value.join('; '));
       }
       return sanitizeForExcel(value || '');
     });
+
+    // Add step information for wizard forms
+    const stepValues = isWizard ? [
+      sanitizeForExcel(submission.stepNumber || 'N/A'),
+      sanitizeForExcel(submission.stepTitle || 'N/A')
+    ] : [];
 
     const metaValues = [
       submission.submittedAt ? new Date(submission.submittedAt) : '',
@@ -206,13 +310,15 @@ export const prepareSubmissionsDataForExcel = (submissions, formElements, formNa
       sanitizeForExcel(submission.userAgent || '')
     ];
 
-    return [...fieldValues, ...metaValues];
+    return [...fieldValues, ...stepValues, ...metaValues];
   });
 
   // Create metadata rows
   const metadata = [
     ['Form Submissions Report'],
     ['Form Name', sanitizeForExcel(formName)],
+    ['Form Type', isWizard ? 'Multi-Step Wizard' : 'Single Step'],
+    ['Total Steps', steps.length],
     ['Export Date', new Date()],
     ['Total Submissions', submissions.length],
     ['Date Range', `${submissions[0]?.submittedAt || 'N/A'} to ${submissions[submissions.length - 1]?.submittedAt || 'N/A'}`],
@@ -232,7 +338,9 @@ export const prepareSubmissionsDataForExcel = (submissions, formElements, formNa
     metadata: {
       formName: sanitizeForExcel(formName),
       exportDate: new Date(),
-      totalSubmissions: submissions.length
+      totalSubmissions: submissions.length,
+      isWizard,
+      totalSteps: steps.length
     }
   };
 };

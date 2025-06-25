@@ -7,6 +7,7 @@ import ConditionalLogicModal from './ConditionalLogicModal';
 import FieldOptionsModal from './FieldOptionsModal';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import StarRating from './StarRating';
+import PageBreakField from './PageBreakField';
 
 const SortableFormElement = ({ element, onRemove, onUpdate, formElements }) => {
   const [showEditModal, setShowEditModal] = useState(false);
@@ -193,7 +194,9 @@ const SortableFormElement = ({ element, onRemove, onUpdate, formElements }) => {
           </div>
         );
 
-
+      case 'pageBreak':
+        return <PageBreakField element={element} isBuilder={true} />;
+        
       default:
         return <div className="text-gray-500">Field type: {element.type}</div>;
     }

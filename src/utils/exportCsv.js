@@ -5,6 +5,60 @@
 
 import { sanitizeHtml } from './security.js';
 
+// Helper function to split form elements into wizard steps
+function splitIntoSteps(formElements) {
+  if (!formElements || formElements.length === 0) {
+    return { steps: [], isWizard: false };
+  }
+
+  const steps = [];
+  let currentStep = {
+    id: 'step-0',
+    title: 'Step 1',
+    description: '',
+    fields: []
+  };
+
+  formElements.forEach((element) => {
+    if (element.type === 'pageBreak') {
+      // Complete current step if it has fields
+      if (currentStep.fields.length > 0) {
+        steps.push(currentStep);
+      }
+      
+      // Start new step
+      currentStep = {
+        id: `step-${steps.length}`,
+        title: element.label || `Step ${steps.length + 2}`,
+        description: element.helpText || '',
+        fields: []
+      };
+    } else {
+      currentStep.fields.push(element);
+    }
+  });
+
+  // Add the last step if it has fields
+  if (currentStep.fields.length > 0) {
+    steps.push(currentStep);
+  }
+
+  // If no page breaks found, treat entire form as single step
+  if (steps.length === 0 && formElements.length > 0) {
+    steps.push({
+      id: 'step-0',
+      title: 'Form',
+      description: '',
+      fields: formElements.filter(el => el.type !== 'pageBreak')
+    });
+  }
+
+  return { 
+    steps, 
+    isWizard: steps.length > 1
+  };
+}
+
 /**
  * Sanitizes data for CSV export to prevent formula injection and XSS
  * @param {string} value - The value to sanitize
@@ -43,7 +97,7 @@ export const sanitizeForCsv = (value) => {
 };
 
 /**
- * Converts form elements to CSV format
+ * Converts form elements to CSV format with wizard support
  * @param {Array} formElements - Array of form elements
  * @param {string} formName - Name of the form
  * @param {Object} formOptions - Form configuration options
@@ -51,6 +105,7 @@ export const sanitizeForCsv = (value) => {
  */
 export const exportFormAsCsv = (formElements, formName = '', formOptions = {}) => {
   const sanitizedFormName = sanitizeForCsv(formName);
+  const { steps, isWizard } = splitIntoSteps(formElements);
   
   // CSV Headers
   const headers = [
@@ -65,37 +120,81 @@ export const exportFormAsCsv = (formElements, formName = '', formOptions = {}) =
     'Help Text',
     'Width',
     'Custom Class',
-    'Conditional Logic'
+    'Conditional Logic',
+    'Wizard Step',
+    'Step Title'
   ];
 
   // Create CSV rows
-  const rows = formElements.map(element => [
-    sanitizeForCsv(element.id || ''),
-    sanitizeForCsv(element.type || ''),
-    sanitizeForCsv(element.label || ''),
-    sanitizeForCsv(element.required ? 'Yes' : 'No'),
-    sanitizeForCsv(element.placeholder || ''),
-    sanitizeForCsv(element.defaultValue || ''),
-    sanitizeForCsv(element.options ? JSON.stringify(element.options) : ''),
-    sanitizeForCsv([
-      element.minLength ? `Min Length: ${element.minLength}` : '',
-      element.maxLength ? `Max Length: ${element.maxLength}` : '',
-      element.pattern ? `Pattern: ${element.pattern}` : '',
-      element.min ? `Min: ${element.min}` : '',
-      element.max ? `Max: ${element.max}` : '',
-      element.step ? `Step: ${element.step}` : ''
-    ].filter(Boolean).join('; ')),
-    sanitizeForCsv(element.helpText || ''),
-    sanitizeForCsv(element.width || 'full'),
-    sanitizeForCsv(element.customClass || ''),
-    sanitizeForCsv(element.conditionalLogic ? JSON.stringify(element.conditionalLogic) : '')
-  ]);
+  const rows = [];
+  
+  if (isWizard) {
+    // Export with wizard structure
+    steps.forEach((step, stepIndex) => {
+      step.fields.forEach(element => {
+        rows.push([
+          sanitizeForCsv(element.id || ''),
+          sanitizeForCsv(element.type || ''),
+          sanitizeForCsv(element.label || ''),
+          sanitizeForCsv(element.required ? 'Yes' : 'No'),
+          sanitizeForCsv(element.placeholder || ''),
+          sanitizeForCsv(element.defaultValue || ''),
+          sanitizeForCsv(element.options ? JSON.stringify(element.options) : ''),
+          sanitizeForCsv([
+            element.minLength ? `Min Length: ${element.minLength}` : '',
+            element.maxLength ? `Max Length: ${element.maxLength}` : '',
+            element.pattern ? `Pattern: ${element.pattern}` : '',
+            element.min ? `Min: ${element.min}` : '',
+            element.max ? `Max: ${element.max}` : '',
+            element.step ? `Step: ${element.step}` : ''
+          ].filter(Boolean).join('; ')),
+          sanitizeForCsv(element.helpText || ''),
+          sanitizeForCsv(element.width || 'full'),
+          sanitizeForCsv(element.customClass || ''),
+          sanitizeForCsv(element.conditionalLogic ? JSON.stringify(element.conditionalLogic) : ''),
+          sanitizeForCsv(`${stepIndex + 1}`),
+          sanitizeForCsv(step.title)
+        ]);
+      });
+    });
+  } else {
+    // Export single-step form (original behavior)
+    formElements.forEach(element => {
+      if (element.type !== 'pageBreak') {
+        rows.push([
+          sanitizeForCsv(element.id || ''),
+          sanitizeForCsv(element.type || ''),
+          sanitizeForCsv(element.label || ''),
+          sanitizeForCsv(element.required ? 'Yes' : 'No'),
+          sanitizeForCsv(element.placeholder || ''),
+          sanitizeForCsv(element.defaultValue || ''),
+          sanitizeForCsv(element.options ? JSON.stringify(element.options) : ''),
+          sanitizeForCsv([
+            element.minLength ? `Min Length: ${element.minLength}` : '',
+            element.maxLength ? `Max Length: ${element.maxLength}` : '',
+            element.pattern ? `Pattern: ${element.pattern}` : '',
+            element.min ? `Min: ${element.min}` : '',
+            element.max ? `Max: ${element.max}` : '',
+            element.step ? `Step: ${element.step}` : ''
+          ].filter(Boolean).join('; ')),
+          sanitizeForCsv(element.helpText || ''),
+          sanitizeForCsv(element.width || 'full'),
+          sanitizeForCsv(element.customClass || ''),
+          sanitizeForCsv(element.conditionalLogic ? JSON.stringify(element.conditionalLogic) : ''),
+          sanitizeForCsv('1'),
+          sanitizeForCsv('Single Step Form')
+        ]);
+      }
+    });
+  }
 
   // Combine headers and rows
   const csvContent = [
     `# Form Export: ${sanitizedFormName}`,
+    `# Form Type: ${isWizard ? 'Multi-Step Wizard' : 'Single Step'}`,
+    `# Total Steps: ${steps.length}`,
     `# Exported on: ${sanitizeForCsv(new Date().toISOString())}`,
-    `# Total Fields: ${formElements.length}`,
+    `# Total Fields: ${formElements.filter(el => el.type !== 'pageBreak').length}`,
     '', // Empty line
     headers.join(','),
     ...rows.map(row => row.join(','))

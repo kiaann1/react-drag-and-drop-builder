@@ -52,7 +52,7 @@ function splitIntoSteps(formElements) {
   };
 }
 
-export function exportAsTypescriptComponent(formFields, _formName = '', formOptions = {}) {
+export function exportAsTypescriptComponent(formFields, formName = '', formOptions = {}) {
   const { steps, isWizard } = splitIntoSteps(formFields);
 
   // TypeScript interfaces
@@ -157,7 +157,7 @@ ${helpText}
 ${helpText}
     </div>`;
 
-      case 'select': {
+      case 'select':
         const selectOptions = field.options || [{ label: 'Option 1', value: 'option1' }];
         return `    <div key="${id}" className="mb-3">
       <label htmlFor="${id}" className="form-label">${label}${field.required ? ' *' : ''}</label>
@@ -177,9 +177,8 @@ ${helpText}
       </select>
 ${helpText}
     </div>`;
-      }
 
-      case 'radio': {
+      case 'radio':
         const radioOptions = field.options || [{ label: 'Option 1', value: 'option1' }];
         return `    <div key="${id}" className="mb-3">
       <fieldset>
@@ -204,9 +203,8 @@ ${helpText}
       </fieldset>
 ${helpText}
     </div>`;
-      }
 
-      case 'checkbox': {
+      case 'checkbox':
         const checkboxOptions = field.options || [{ label: 'Checkbox 1', value: 'checkbox1' }];
         return `    <div key="${id}" className="mb-3">
       <fieldset>
@@ -231,9 +229,8 @@ ${helpText}
       </fieldset>
 ${helpText}
     </div>`;
-      }
 
-      case 'number': {
+      case 'number':
         return `    <div key="${id}" className="mb-3">
       <label htmlFor="${id}" className="form-label">${label}${field.required ? ' *' : ''}</label>
       <input
@@ -252,11 +249,9 @@ ${helpText}
       />
 ${helpText}
     </div>`;
-      }
 
-      default: {
+      default:
         return '';
-      }
     }
   };
 

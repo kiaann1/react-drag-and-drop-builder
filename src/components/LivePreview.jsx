@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import StarRating from './StarRating';
 import FormOptionsModal from './FormOptionsModal';
+import WizardNavigation from './WizardNavigation';
+import PageBreakField, { useWizardSteps } from './PageBreakField';
 
 // --- Add conditional logic evaluation utility ---
 function evaluateCondition(rule, formValues) {
@@ -95,6 +97,10 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
   const [error, setError] = useState('');
   // --- Track form values for conditional logic ---
   const [formValues, setFormValues] = useState({});
+  
+  // Wizard state
+  const [currentStep, setCurrentStep] = useState(0);
+  const { steps, totalSteps, isWizard } = useWizardSteps(formElements);
 
   // Validate and sanitize form elements
   const validateElement = useCallback((element) => {
@@ -288,6 +294,10 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
     };
 
     switch (element.type) {
+      case 'pageBreak':
+        // Page breaks are handled by wizard logic, but show in builder
+        return <PageBreakField key={element.id} element={element} isBuilder={true} />;
+        
       case 'text':
       case 'email':
       case 'phone':
@@ -872,7 +882,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
 
       case 'checkbox':
         const checkboxOptions = getElementOptions();
-        // Debug: log the options being rendered
         console.log('Checkbox options for', element.id, checkboxOptions);
         return (
           <div key={element.id} className={`mb-4 ${getContainerClasses()}`}>
@@ -1013,39 +1022,91 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
               </p>
             </div>
           ) : (
-            <div className={`p-6 ${isExpanded ? 'max-w-4xl mx-auto' : ''}`}>
+            <div className={`${isExpanded ? 'max-w-4xl mx-auto' : ''}`}>
               <form
-                key={JSON.stringify(formElements)} // <--- Add this line
+                key={JSON.stringify(formElements)}
                 style={{ backgroundColor: formOptions.containerBackgroundColor || '#F9FAFB' }}
+                className="flex flex-col min-h-full"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (isWizard && currentStep === totalSteps - 1) {
+                    console.log('Form submitted with data:', formValues);
+                  } else if (!isWizard) {
+                    console.log('Form submitted with data:', formValues);
+                  }
+                }}
               >
-                {formOptions.formTitle && (
-                  <div className="mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">{formOptions.formTitle}</h2>
-                    {formOptions.formDescription && (
-                      <p className="text-gray-600 mt-2">{formOptions.formDescription}</p>
-                    )}
+                <div className="flex-1 p-6">
+                  {formOptions.formTitle && (
+                    <div className="mb-6">
+                      <h2 className="text-2xl font-bold text-gray-900">{formOptions.formTitle}</h2>
+                      {formOptions.formDescription && (
+                        <p className="text-gray-600 mt-2">{formOptions.formDescription}</p>
+                      )}
+                    </div>
+                  )}
+                  
+                  {isWizard ? (
+                    <>
+                      {/* Step Title */}
+                      {steps[currentStep] && (
+                        <div className="mb-6">
+                          <h3 className="text-xl font-semibold text-gray-800">
+                            {steps[currentStep].title}
+                          </h3>
+                          {steps[currentStep].description && (
+                            <p className="text-gray-600 mt-1">
+                              {steps[currentStep].description}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* Current Step Fields */}
+                      {steps[currentStep]?.fields.map(renderPreviewElement)}
+                    </>
+                  ) : (
+                    // Single-step form (original behavior)
+                    validElements.map(renderPreviewElement)
+                  )}
+                </div>
+                
+                {/* Navigation Section */}
+                {isWizard ? (
+                  <WizardNavigation
+                    currentStep={currentStep}
+                    totalSteps={totalSteps}
+                    onNext={() => setCurrentStep(prev => Math.min(prev + 1, totalSteps - 1))}
+                    onPrevious={() => setCurrentStep(prev => Math.max(prev - 1, 0))}
+                    isLastStep={currentStep === totalSteps - 1}
+                    onSubmit={() => console.log('Form submitted with data:', formValues)}
+                    nextButtonText={formOptions.nextButtonText || "Next"}
+                    prevButtonText={formOptions.prevButtonText || "Previous"}
+                    submitButtonText={formOptions.submitButtonText || "Submit"}
+                  />
+                ) : (
+                  <div className="p-6 pt-0">
+                    <button
+                      type="submit"
+                      className="w-full py-3 px-4 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2"
+                      style={{
+                        backgroundColor: formOptions.submitButtonColor || '#3B82F6',
+                        color: formOptions.submitButtonTextColor || '#FFFFFF',
+                        '--tw-ring-color': formOptions.submitButtonColor || '#3B82F6',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = formOptions.submitButtonHoverColor || '#2563EB';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = formOptions.submitButtonColor || '#3B82F6';
+                      }}
+                    >
+                      {(formOptions.submitButtonText && formOptions.submitButtonText.trim() !== '')
+                        ? formOptions.submitButtonText
+                        : 'Submit'}
+                    </button>
                   </div>
                 )}
-                {validElements.map(renderPreviewElement)}
-                <button
-                  type="submit"
-                  className="w-full py-3 px-4 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2"
-                  style={{
-                    backgroundColor: formOptions.submitButtonColor || '#3B82F6',
-                    color: formOptions.submitButtonTextColor || '#FFFFFF',
-                    '--tw-ring-color': formOptions.submitButtonColor || '#3B82F6',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.backgroundColor = formOptions.submitButtonHoverColor || '#2563EB';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.backgroundColor = formOptions.submitButtonColor || '#3B82F6';
-                  }}
-                >
-                  {(formOptions.submitButtonText && formOptions.submitButtonText.trim() !== '')
-                    ? formOptions.submitButtonText
-                    : 'Submit'}
-                </button>
               </form>
             </div>
           )}

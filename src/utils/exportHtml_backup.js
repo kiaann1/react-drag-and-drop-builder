@@ -349,25 +349,6 @@ export function exportAsHtml(formElements, formName = '', formOptions = {}, hexT
           if (stepInfo) {
             stepInfo.textContent = \`Step \${this.currentStep + 1} of \${this.totalSteps}\`;
           }
-          
-          // Update navigation buttons
-          const prevBtn = document.querySelector('.wizard-prev');
-          const nextBtn = document.querySelector('.wizard-next');
-          const submitBtn = document.querySelector('.wizard-submit');
-          
-          if (prevBtn) {
-            prevBtn.disabled = this.currentStep === 0;
-          }
-          
-          if (nextBtn && submitBtn) {
-            if (this.currentStep === this.totalSteps - 1) {
-              nextBtn.style.display = 'none';
-              submitBtn.style.display = 'inline-block';
-            } else {
-              nextBtn.style.display = 'inline-block';
-              submitBtn.style.display = 'none';
-            }
-          }
         }
         
         validateCurrentStep() {
@@ -412,9 +393,8 @@ export function exportAsHtml(formElements, formName = '', formOptions = {}, hexT
       });
     </script>`;
   };
-
-  // Generate HTML for a single element
-  const generateElementHtml = (element) => {
+  // Build HTML for each field, including all settings and conditional logic as data attributes
+  const htmlElements = formElements.map(element => {
     // Always include conditionalLogic as exported from ConditionalLogicModal
     const logicAttr = element.conditionalLogic
       ? ` data-conditional-logic='${JSON.stringify(element.conditionalLogic)}'`
@@ -429,13 +409,8 @@ export function exportAsHtml(formElements, formName = '', formOptions = {}, hexT
     const id = element.id || '';
     const name = element.id || '';
     const widthClass = element.width && element.width !== 'full'
-      ? (element.width === 'half' ? 'w-1/2' : element.width === 'third' ? 'w-1/3' : element.width === 'quarter' ? 'w-1/4' : 'w-full')
+      ? (element.width === 'half' ? 'w-1/2 pr-2' : element.width === 'third' ? 'w-1/3 pr-2' : element.width === 'quarter' ? 'w-1/4 pr-2' : 'w-full')
       : 'w-full';
-
-    // Skip pageBreak elements as they're handled by wizard structure
-    if (element.type === 'pageBreak') {
-      return '';
-    }
 
     switch (element.type) {
       case 'text':
@@ -450,8 +425,8 @@ export function exportAsHtml(formElements, formName = '', formOptions = {}, hexT
       case 'city':
       case 'zipCode':
       case 'website':
-        return `<div class="form-group ${widthClass}">
-  <label for="${id}" class="form-label">${label}${showAsterisk ? ' <span style="color: red;">*</span>' : ''}</label>
+        return `<div class="mb-3 ${widthClass}">
+  <label for="${id}" class="form-label">${label}${showAsterisk ? ' <span class="text-danger">*</span>' : ''}</label>
   <input 
     type="${element.type === 'website' ? 'url' : element.type === 'phone' ? 'tel' : 'text'}"
     class="form-control${customClass}" 
@@ -466,16 +441,15 @@ export function exportAsHtml(formElements, formName = '', formOptions = {}, hexT
   >
   ${helpText}
 </div>`;
-
       case 'paragraph':
-        return `<div class="form-group ${widthClass}">
-  <label for="${id}" class="form-label">${label}${showAsterisk ? ' <span style="color: red;">*</span>' : ''}</label>
+        return `<div class="mb-3 ${widthClass}">
+  <label for="${id}" class="form-label">${label}${showAsterisk ? ' <span class="text-danger">*</span>' : ''}</label>
   <textarea 
     class="form-control${customClass}" 
     id="${id}" 
     name="${name}" 
+    rows="${element.size === 'small' ? '2' : element.size === 'large' ? '6' : '4'}" 
     placeholder="${placeholder}" 
-    rows="${element.size === 'small' ? '2' : element.size === 'large' ? '6' : '4'}"
     ${required} ${disabled}
     ${element.minLength ? `minlength="${element.minLength}"` : ''}
     ${element.maxLength ? `maxlength="${element.maxLength}"` : ''}
@@ -483,71 +457,45 @@ export function exportAsHtml(formElements, formName = '', formOptions = {}, hexT
   >${element.defaultValue || ''}</textarea>
   ${helpText}
 </div>`;
-
       case 'select':
-        const selectOptions = element.options || [{ label: 'Option 1', value: 'option1' }];
-        return `<div class="form-group ${widthClass}">
-  <label for="${id}" class="form-label">${label}${showAsterisk ? ' <span style="color: red;">*</span>' : ''}</label>
-  <select 
-    class="form-control${customClass}" 
-    id="${id}" 
-    name="${name}" 
-    ${required} ${disabled}
-    ${logicAttr}
-  >
+        const options = (element.options || []).map(opt =>
+          `<option value="${opt.value}"${element.defaultValue === opt.value ? ' selected' : ''}>${opt.label}</option>`
+        ).join('\n') || `<option value="">No options available</option>`;
+        return `<div class="mb-3 ${widthClass}">
+  <label for="${id}" class="form-label">${label}${showAsterisk ? ' <span class="text-danger">*</span>' : ''}</label>
+  <select class="form-select${customClass}" id="${id}" name="${name}" ${required} ${disabled} ${logicAttr}>
     <option value="">${placeholder || 'Select an option'}</option>
-    ${selectOptions.map(opt => `<option value="${opt.value}" ${element.defaultValue === opt.value ? 'selected' : ''}>${opt.label}</option>`).join('\n    ')}
+    ${options}
   </select>
   ${helpText}
 </div>`;
-
-      case 'radio':
-        const radioOptions = element.options || [{ label: 'Option 1', value: 'option1' }];
-        return `<div class="form-group ${widthClass}">
-  <fieldset>
-    <legend class="form-label">${label}${showAsterisk ? ' <span style="color: red;">*</span>' : ''}</legend>
-    ${radioOptions.map((opt, idx) => `
-    <div style="margin-bottom: 8px;">
-      <input 
-        type="radio" 
-        id="${id}_${idx}" 
-        name="${name}" 
-        value="${opt.value}"
-        ${element.defaultValue === opt.value ? 'checked' : ''}
-        ${required && idx === 0 ? 'required' : ''} ${disabled}
-        ${logicAttr}
-      >
-      <label for="${id}_${idx}" style="margin-left: 8px;">${opt.label}</label>
-    </div>`).join('\n    ')}
-  </fieldset>
-  ${helpText}
-</div>`;
-
       case 'checkbox':
-        const checkboxOptions = element.options || [{ label: 'Checkbox 1', value: 'checkbox1' }];
-        return `<div class="form-group ${widthClass}">
-  <fieldset>
-    <legend class="form-label">${label}${showAsterisk ? ' <span style="color: red;">*</span>' : ''}</legend>
-    ${checkboxOptions.map((opt, idx) => `
-    <div style="margin-bottom: 8px;">
-      <input 
-        type="checkbox" 
-        id="${id}_${idx}" 
-        name="${name}[]" 
-        value="${opt.value}"
-        ${Array.isArray(element.defaultValue) && element.defaultValue.includes(opt.value) ? 'checked' : ''}
-        ${disabled}
-        ${logicAttr}
-      >
-      <label for="${id}_${idx}" style="margin-left: 8px;">${opt.label}</label>
-    </div>`).join('\n    ')}
-  </fieldset>
+        const checkboxOptions = (element.options || []).map((opt, idx) =>
+          `<div class="form-check">
+    <input class="form-check-input${customClass}" type="checkbox" name="${name}" id="${id}_${idx}" value="${opt.value}" ${logicAttr} ${disabled}>
+    <label class="form-check-label" for="${id}_${idx}">${opt.label}</label>
+  </div>`
+        ).join('\n') || '';
+        return `<div class="mb-3 ${widthClass}">
+  <label class="form-label">${label}${showAsterisk ? ' <span class="text-danger">*</span>' : ''}</label>
+  ${checkboxOptions}
   ${helpText}
 </div>`;
-
+      case 'radio':
+        const radioOptions = (element.options || []).map((opt, idx) =>
+          `<div class="form-check">
+    <input class="form-check-input${customClass}" type="radio" name="${name}" id="${id}_${idx}" value="${opt.value}" ${element.defaultValue === opt.value ? 'checked' : ''} ${required} ${logicAttr} ${disabled}>
+    <label class="form-check-label" for="${id}_${idx}">${opt.label}</label>
+  </div>`
+        ).join('\n') || '';
+        return `<div class="mb-3 ${widthClass}">
+  <label class="form-label">${label}${showAsterisk ? ' <span class="text-danger">*</span>' : ''}</label>
+  ${radioOptions}
+  ${helpText}
+</div>`;
       case 'number':
-        return `<div class="form-group ${widthClass}">
-  <label for="${id}" class="form-label">${label}${showAsterisk ? ' <span style="color: red;">*</span>' : ''}</label>
+        return `<div class="mb-3 ${widthClass}">
+  <label for="${id}" class="form-label">${label}${showAsterisk ? ' <span class="text-danger">*</span>' : ''}</label>
   <input 
     type="number"
     class="form-control${customClass}" 
@@ -563,100 +511,106 @@ export function exportAsHtml(formElements, formName = '', formOptions = {}, hexT
   >
   ${helpText}
 </div>`;
-
+      // Add more cases as needed for other field types...
       default:
         return '';
     }
-  };
+  }).join('\n\n');
 
-  // Generate form content
-  const generateFormContent = () => {
-    if (isWizard) {
-      // Generate wizard form
-      const wizardSteps = steps.map((step, stepIndex) => `
-        <div class="wizard-step ${stepIndex === 0 ? 'active' : ''}" data-step="${stepIndex}">
-          <div class="step-header">
-            <h3 class="step-title">${step.title}</h3>
-            ${step.description ? `<p class="step-description">${step.description}</p>` : ''}
-          </div>
-          <div class="step-content">
-            ${step.fields.map(generateElementHtml).join('\n')}
-          </div>
-        </div>
-      `).join('\n');
-
-      const wizardNavigation = `
-        <div class="wizard-navigation">
-          <div class="wizard-progress">
-            <div class="wizard-step-info">Step 1 of ${steps.length}</div>
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${(1 / steps.length) * 100}%"></div>
-            </div>
-            <div class="step-indicators">
-              ${steps.map((_, index) => `
-                <div class="step-indicator ${index === 0 ? 'active' : ''}">${index + 1}</div>
-              `).join('')}
-            </div>
-          </div>
-          <div class="wizard-buttons">
-            <button type="button" class="btn btn-secondary wizard-prev" disabled>
-              ${formOptions.prevButtonText || 'Previous'}
-            </button>
-            <button type="button" class="btn btn-primary wizard-next">
-              ${formOptions.nextButtonText || 'Next'}
-            </button>
-            <button type="button" class="btn btn-primary wizard-submit" style="display: none;">
-              ${formOptions.submitButtonText || 'Submit'}
-            </button>
-          </div>
-        </div>
-      `;
-
-      return `
-        <div class="wizard-container">
-          ${wizardSteps}
-          ${wizardNavigation}
-        </div>
-      `;
-    } else {
-      // Generate single-step form
-      const singleStepElements = formElements
-        .filter(el => el.type !== 'pageBreak')
-        .map(generateElementHtml)
-        .join('\n');
-
-      return `
-        <div class="single-step-form">
-          ${singleStepElements}
-          <div class="form-submit" style="margin-top: 20px;">
-            <button type="submit" class="btn btn-primary">
-              ${formOptions.submitButtonText || 'Submit'}
-            </button>
-          </div>
-        </div>
-      `;
-    }
-  };
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${formOptions.formTitle || formName || 'Form'}</title>
-  ${generateStyles()}
+  <title>${formOptions.formTitle || formName}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: ${formOptions.containerBackgroundColor || '#f8f9fa'}; }
+    .form-container { background-color: ${formOptions.backgroundColor || '#ffffff'}; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);}
+    .form-label { color: ${formOptions.labelTextColor || '#212529'}; font-weight: 500; }
+    .form-control, .form-select { color: ${formOptions.inputTextColor || '#212529'}; border-color: ${formOptions.inputBorderColor || '#ced4da'}; background-color: ${formOptions.backgroundColor || '#ffffff'}; }
+    .form-control:focus, .form-select:focus { border-color: ${formOptions.inputFocusBorderColor || '#86b7fe'}; box-shadow: 0 0 0 0.25rem rgba(${formOptions.inputFocusBorderColor ? hexToRgb(formOptions.inputFocusBorderColor) : '13, 110, 253'}, 0.25);}
+    .form-control::placeholder { color: ${formOptions.placeholderTextColor || '#6c757d'}; }
+    .btn-primary { background-color: ${formOptions.submitButtonColor || '#0d6efd'}; border-color: ${formOptions.submitButtonColor || '#0d6efd'}; color: ${formOptions.submitButtonTextColor || '#ffffff'}; }
+    .btn-primary:hover { background-color: ${formOptions.submitButtonHoverColor || '#0b5ed7'}; border-color: ${formOptions.submitButtonHoverColor || '#0b5ed7'}; }
+    .form-title { color: ${formOptions.labelTextColor || '#212529'}; margin-bottom: ${formOptions.formDescription ? '1rem' : '2rem'}; }
+    .form-description { color: ${formOptions.labelTextColor || '#6c757d'}; margin-bottom: 2rem; }
+  </style>
 </head>
 <body>
-  <div class="form-container">
-    ${formOptions.formTitle ? `<h1 class="form-title">${formOptions.formTitle}</h1>` : ''}
-    ${formOptions.formDescription ? `<p class="form-description">${formOptions.formDescription}</p>` : ''}
-    
-    <form id="${isWizard ? 'wizardForm' : 'singleForm'}" ${isWizard ? '' : 'action="#" method="POST"'}>
-      ${generateFormContent()}
-    </form>
+  <div class="container my-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="form-container p-4">
+          ${formOptions.formTitle ? `<h2 class="form-title text-center">${formOptions.formTitle}</h2>` : ''}
+          ${formOptions.formDescription ? `<p class="form-description text-center">${formOptions.formDescription}</p>` : ''}
+          <form id="bootstrapForm" novalidate>
+            ${htmlElements}
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-primary btn-lg">${formOptions.submitButtonText || 'Submit Form'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
-  
-  ${generateWizardScript()}
 </body>
 </html>`;
+}
+
+// If you have any conditional logic evaluation, update it as follows:
+function evaluateCondition(rule, formValues) {
+  const { field, operator, value } = rule;
+  const fieldValue = formValues[field];
+
+  switch (operator) {
+    case 'equals': return fieldValue == value;
+    case 'notEquals': return fieldValue != value;
+    case 'contains': return String(fieldValue ?? '').includes(value);
+    case 'greaterThan': return Number(fieldValue) > Number(value);
+    case 'lessThan': return Number(fieldValue) < Number(value);
+    case 'isEmpty': return !fieldValue || fieldValue === '';
+    case 'isNotEmpty': return !!fieldValue && fieldValue !== '';
+    case 'startsWith': return String(fieldValue ?? '').startsWith(value);
+    case 'endsWith': return String(fieldValue ?? '').endsWith(value);
+    case 'matches':
+      try { return new RegExp(value).test(fieldValue ?? ''); } catch { return false; }
+    case 'in':
+      return value.split(',').map(v => v.trim()).includes(fieldValue);
+    case 'notIn':
+      return !value.split(',').map(v => v.trim()).includes(fieldValue);
+    case 'checked':
+    case 'isChecked':
+      if (Array.isArray(fieldValue)) {
+        if (value && value !== '') {
+          return fieldValue.includes(value);
+        }
+        return fieldValue.length > 0;
+      }
+      if (typeof fieldValue === 'string') {
+        if (value && value !== '') {
+          return fieldValue === value;
+        }
+        return !!fieldValue;
+      }
+      return fieldValue === true || fieldValue === 'true' || fieldValue === 1;
+    case 'notChecked':
+      if (Array.isArray(fieldValue)) {
+        if (value && value !== '') {
+          return !fieldValue.includes(value);
+        }
+        return fieldValue.length === 0;
+      }
+      if (typeof fieldValue === 'string') {
+        if (value && value !== '') {
+          return fieldValue !== value;
+        }
+        return !fieldValue;
+      }
+      return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
+    case 'true': return fieldValue === true || fieldValue === 'true' || fieldValue === 1;
+    case 'false': return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
+    default: return true;
+  }
 }
