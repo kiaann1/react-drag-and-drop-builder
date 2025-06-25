@@ -56,49 +56,56 @@ export function exportAsCf7(formElements, formOptions = {}) {
   const { steps, isWizard } = splitIntoSteps(formElements);
   
   if (isWizard) {
-    // For wizard forms, create one CF7 form per step
-    const stepForms = steps.map((step, stepIndex) => {
-      const stepFields = step.fields.map(element => generateFieldCf7(element, formOptions)).filter(f => f).join('\n');
+    // Simple CF7 multi-step format compatible with WordPress plugins
+    const stepSections = steps.map((step, stepIndex) => {
+      const stepFields = step.fields.map(element => generateFieldCf7(element, formOptions, true)).filter(f => f).join('\n\n');
       
-      const navigationComments = [];
-      if (stepIndex > 0) {
-        navigationComments.push('<!-- Add previous step button with multi-step plugin -->');
-      }
-      if (stepIndex < steps.length - 1) {
-        navigationComments.push('<!-- Add next step button with multi-step plugin -->');
-      } else {
-        navigationComments.push('<!-- This is the final step with submit button -->');
-      }
-      
-      return `
-<!-- Step ${stepIndex + 1}: ${step.title} -->
-<!-- ${step.description} -->
-${navigationComments.join('\n')}
+      return `<!-- ========== STEP ${stepIndex + 1}: ${step.title.toUpperCase()} ========== -->
+${step.description ? `<!-- ${step.description} -->` : ''}
 
 ${stepFields}
 
-${stepIndex === steps.length - 1 ? `[submit "${formOptions.submitButtonText || 'Send'}"]` : '<!-- Next step button handled by multi-step plugin -->'}
-`;
+<!-- ========== END STEP ${stepIndex + 1} ========== -->`;
     });
     
-    return `<!-- Multi-Step Contact Form 7 -->
-<!-- Note: This requires a multi-step plugin like CF7 Multi-Step Forms -->
-<!-- Each step should be a separate form or handled by your multi-step plugin -->
+    return `<!-- MULTI-STEP CONTACT FORM 7 -->
+<!-- IMPORTANT: Install a CF7 multi-step plugin first! -->
+<!-- Recommended: "CF7 Multi-Step Forms" from WordPress repository -->
 
-${stepForms.join('\n<!-- End Step -->\n')}
+${stepSections.join('\n\n')}
 
-<!-- Wizard Structure -->
-<!-- Steps: ${steps.map(s => s.title).join(' -> ')} -->`;
+[submit "${formOptions.submitButtonText || 'Send'}"]
+
+<!-- PLUGIN SETUP INSTRUCTIONS -->
+<!-- 1. Install "CF7 Multi-Step Forms" plugin -->
+<!-- 2. In CF7 form editor, wrap each step with [step] shortcodes -->
+<!-- 3. Example: [step step_name="step1"]...fields...[/step] -->
+<!-- 4. The plugin will handle navigation automatically -->
+
+<!-- ALTERNATIVE PLUGIN-READY FORMAT -->
+<!-- Copy this version if your plugin uses different syntax: -->
+
+[step step_name="step1" step_title="${steps[0]?.title || 'Step 1'}"]
+${steps[0]?.fields.map(element => generateFieldCf7(element, formOptions, false)).filter(f => f).join('\n') || ''}
+[/step]
+
+${steps.slice(1).map((step, index) => `
+[step step_name="step${index + 2}" step_title="${step.title}"]
+${step.fields.map(element => generateFieldCf7(element, formOptions, false)).filter(f => f).join('\n')}
+[/step]`).join('')}
+
+[submit "${formOptions.submitButtonText || 'Send'}"]`;
   }
   
-  // Single step form
-  const fieldsCf7 = formElements.map(element => generateFieldCf7(element, formOptions)).filter(f => f).join('\n');
+  // Single step form - clean and simple
+  const fieldsCf7 = formElements.map(element => generateFieldCf7(element, formOptions, true)).filter(f => f).join('\n\n');
   
-  return `
-<!-- Contact Form 7 Shortcode -->
+  return `<!-- CONTACT FORM 7 SHORTCODE -->
+<!-- Ready to paste into WordPress Contact Form 7 -->
+
 ${fieldsCf7}
-[submit "${formOptions.submitButtonText || 'Send'}"]
-`;
+
+[submit "${formOptions.submitButtonText || 'Send'}"]`;
 }
 
 // Map builder types to CF7 shortcode types
@@ -117,7 +124,7 @@ const typeMap = {
   url: 'url',
 };
 
-function generateFieldCf7(element, formOptions = {}) {
+function generateFieldCf7(element, formOptions = {}, includeLabel = true) {
   // Always include conditionalLogic as exported from ConditionalLogicModal
   const logicComment = element.conditionalLogic
     ? `<!-- conditionalLogic: ${JSON.stringify(element.conditionalLogic)} -->\n`
@@ -168,13 +175,15 @@ function generateFieldCf7(element, formOptions = {}) {
       fieldShortcode = `[${cf7Type}${required} ${name} placeholder "${element.placeholder || element.label || ''}"]`;
   }
 
-  const helpText = element.helpText
-    ? `<div style="font-size:12px;color:${formOptions.placeholderTextColor || '#9CA3AF'};margin-top:4px;">${element.helpText}</div>`
-    : '';
-
-  return `${logicComment}<div style="margin-bottom:18px;">
-  <label style="display:block;font-weight:500;color:${formOptions.labelTextColor || '#374151'};margin-bottom:6px;">${element.label || name}${element.required ? ' *' : ''}</label>
-  <span style="display:block;color:${formOptions.inputTextColor || '#111827'};margin-bottom:2px;">${fieldShortcode}</span>
-  ${helpText}
-</div>`;
+  if (includeLabel) {
+    const label = element.label || name;
+    const helpText = element.helpText ? `<!-- Help: ${element.helpText} -->` : '';
+    
+    return `${logicComment}${label}${element.required ? ' *' : ''}
+${fieldShortcode}
+${helpText}`;
+  } else {
+    return `${logicComment}${fieldShortcode}`;
+  }
 }
+
