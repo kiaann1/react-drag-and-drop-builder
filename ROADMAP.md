@@ -9,9 +9,10 @@
 - [x] Form validation
 - [x] Multi Wizard
 - [x] Form Templates option - applies a predetermined set of fields 
+- [x] Added SweetAlert2 in replacement of all alerts
 
 ## Enhanced UX
-- [ ] Mobile-responsive preview
+- [x] Mobile-responsive preview
 
 ## Technical Debt & Improvements
 - [ ] Add comprehensive testing suite

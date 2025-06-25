@@ -23,11 +23,11 @@ const Sidebar = ({ onReset }) => {
   };
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 h-screen overflow-y-auto flex flex-col">
-      <div className="p-6 flex-1">
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Add Fields</h2>
-          <p className="text-xs text-gray-600 mb-4">
+    <div className="w-full lg:w-80 bg-white border-r-0 lg:border-r border-gray-200 border-b lg:border-b-0 h-auto lg:h-screen overflow-y-auto flex flex-col">
+      <div className="p-4 lg:p-6 flex-1">
+        <div className="mb-4 lg:mb-6">
+          <h2 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">Add Fields</h2>
+          <p className="text-xs text-gray-600 mb-3 lg:mb-4">
             Drag fields to add them to your form
           </p>
           
@@ -59,10 +59,13 @@ const Sidebar = ({ onReset }) => {
         </div>
         
         <FormElementsPalette searchTerm={searchTerm} />
-              <div className="p-6 border-t border-gray-200">
+      </div>
+      
+      {/* Clear button - sticky at bottom on mobile */}
+      <div className="p-4 lg:p-6 border-t border-gray-200 bg-white lg:bg-transparent">
         <button 
           onClick={handleReset}
-          className="w-full px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-md hover:bg-red-50 hover:border-red-400 transition-colors"
+          className="w-full px-3 py-2 lg:px-4 lg:py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-md hover:bg-red-50 hover:border-red-400 transition-colors"
           title="Clear all form fields"
         >
           <div className="flex items-center justify-center space-x-2">
@@ -73,8 +76,6 @@ const Sidebar = ({ onReset }) => {
           </div>
         </button>
       </div>
-      </div>
-
     </div>
   );
 };

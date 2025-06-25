@@ -31,13 +31,13 @@ const DraggableElement = ({ element }) => {
       {...listeners}
       {...attributes}
       className={`
-        p-3 mb-2 bg-white border border-gray-200 rounded-lg cursor-grab active:cursor-grabbing
+        p-2 lg:p-3 mb-2 bg-white border border-gray-200 rounded-lg cursor-grab active:cursor-grabbing
         hover:border-blue-300 hover:shadow-sm transition-all duration-200
-        flex items-center space-x-2 group text-left
+        flex items-center space-x-1 lg:space-x-2 group text-left
         ${isDragging ? 'opacity-40' : 'hover:opacity-100'}
       `}
     >
-      <span className="w-4 h-4" dangerouslySetInnerHTML={{ __html: element.icon || '' }} />
+      <span className="w-3 h-3 lg:w-4 lg:h-4 flex-shrink-0" dangerouslySetInnerHTML={{ __html: element.icon || '' }} />
       <span className="text-xs font-medium text-gray-700 truncate">{label}</span>
     </div>
   );
@@ -109,7 +109,7 @@ const FormElementsPalette = ({ searchTerm = '' }) => {
             </span>
           </button>
           {openCategory === category && (
-            <div className="grid grid-cols-2 gap-2 p-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-1 lg:gap-2 p-2">
               {filterElements(items).map((element) => (
                 <DraggableElement key={element.type} element={element} />
               ))}

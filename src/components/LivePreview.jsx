@@ -960,64 +960,67 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
   // Note: validElements is already declared above using useMemo
 
   return (
-    <div className={`${isExpanded ? 'w-full' : 'w-96 min-w-96'} transition-all duration-300 ease-in-out`}>
-      <div className="p-6 h-full">
-        <div className={`mb-4 ${isExpanded ? 'grid grid-cols-2 gap-4' : ''}`}>
+    <div className={`${isExpanded ? 'w-full' : 'w-full lg:w-96 lg:min-w-96'} transition-all duration-300 ease-in-out order-3 lg:order-3`}>
+      <div className="p-4 lg:p-6 h-full">
+        <div className={`mb-4 ${isExpanded ? 'flex flex-col sm:grid sm:grid-cols-2 gap-4' : ''}`}>
           {/* Title and description */}
-          <div className={isExpanded ? '' : 'mb-3'}>
-            <h3 className="text-lg font-semibold text-gray-900">Live Preview</h3>
-            <p className="text-sm text-gray-600">See how your form will look to users</p>
+          <div className={isExpanded ? 'mb-3 sm:mb-0' : 'mb-3'}>
+            <h3 className="text-base lg:text-lg font-semibold text-gray-900">Live Preview</h3>
+            <p className="text-xs lg:text-sm text-gray-600">See how your form will look to users</p>
           </div>
           
           {/* Buttons */}
-          <div className={`flex items-center space-x-2 ${isExpanded ? 'justify-end' : ''}`}>
+          <div className={`flex items-center space-x-2 ${isExpanded ? 'justify-start sm:justify-end' : ''}`}>
             <button
               onClick={() => setShowFormOptions(true)}
-              className="px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center space-x-2 shadow-sm"
+              className="px-2 py-2 lg:px-3 lg:py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors flex items-center space-x-1 lg:space-x-2 shadow-sm text-xs lg:text-sm"
               title="Configure form settings"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              <span className="text-sm font-medium">Form Options</span>
+              <span className="font-medium hidden sm:inline">Form Options</span>
+              <span className="font-medium sm:hidden">Options</span>
             </button>
             
             <button
               onClick={onToggleExpand}
-              className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-2 shadow-sm"
+              className="px-2 py-2 lg:px-3 lg:py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center space-x-1 lg:space-x-2 shadow-sm text-xs lg:text-sm"
               title={isExpanded ? "Collapse preview" : "Expand preview"}
             >
               {isExpanded ? (
                 <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M15 15v4.5M15 15h4.5M15 15l5.25 5.25" />
                   </svg>
-                  <span className="text-sm font-medium">Collapse</span>
+                  <span className="font-medium hidden sm:inline">Collapse</span>
+                  <span className="font-medium sm:hidden">−</span>
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 lg:w-4 lg:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9m5.25 11.25v-4.5m0 4.5h-4.5m4.5 0L15 15M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15" />
                   </svg>
-                  <span className="text-sm font-medium">Expand</span>
+                  <span className="font-medium hidden sm:inline">Expand</span>
+                  <span className="font-medium sm:hidden">+</span>
                 </>
               )}
             </button>
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[700px] max-h-[700px] overflow-y-auto">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 min-h-[400px] max-h-[400px] lg:min-h-[700px] lg:max-h-[700px] overflow-y-auto">
           {validElements.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-col items-center justify-center py-12 lg:py-20">
+              <div className="w-12 h-12 lg:w-16 lg:h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 lg:w-8 lg:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Form Preview</h3>
-              <p className="text-gray-500 text-center max-w-sm">
+              <h3 className="text-base lg:text-lg font-medium text-gray-900 mb-2">Form Preview</h3>
+              <p className="text-gray-500 text-center max-w-sm text-sm lg:text-base">
                 Add fields to see how your form will look
               </p>
             </div>

@@ -385,13 +385,16 @@ const FormBuilder = () => {
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <div className="flex w-full" style={{ height: 'calc(100vh - 73px)' }}>
+        {/* Mobile: Stack vertically, Desktop: Side by side */}
+        <div className="flex flex-col lg:flex-row w-full" style={{ minHeight: 'calc(100vh - 73px)' }}>
           {!isPreviewExpanded && (
             <>
-              <div className="w-80 flex-shrink-0">
+              {/* Sidebar: Full width on mobile, fixed width on desktop */}
+              <div className="w-full lg:w-80 lg:flex-shrink-0 order-2 lg:order-1">
                 <Sidebar onReset={handleReset} />
               </div>
-              <div className="flex-1 min-w-0">
+              {/* Form Canvas: Full width on mobile, flex-1 on desktop */}
+              <div className="flex-1 min-w-0 order-1 lg:order-2">
                 <FormCanvas 
                   formElements={formElements} 
                   onRemoveElement={removeElement}
@@ -400,6 +403,7 @@ const FormBuilder = () => {
               </div>
             </>
           )}
+          {/* LivePreview: Always visible, responsive */}
           <LivePreview 
             formElements={formElements} 
             isExpanded={isPreviewExpanded}
