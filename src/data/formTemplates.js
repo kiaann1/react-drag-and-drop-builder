@@ -212,7 +212,7 @@ export const formTemplates = [
         placeholder: 'Enter expected salary',
         required: false,
         width: 'full',
-        helpText: 'Annual salary expectation in USD'
+        helpText: 'Annual salary expectation'
       },
       {
         id: 'start-date',
@@ -299,11 +299,11 @@ export const formTemplates = [
         required: true,
         width: 'full',
         options: [
-          { value: 'keynote', label: 'Keynote Presentation' },
-          { value: 'workshop1', label: 'Morning Workshop' },
-          { value: 'workshop2', label: 'Afternoon Workshop' },
-          { value: 'panel', label: 'Panel Discussion' },
-          { value: 'networking', label: 'Networking Session' }
+          { value: 'option1', label: 'Option 1' },
+          { value: 'option2', label: 'Option 2' },
+          { value: 'option3', label: 'Option 3' },
+          { value: 'option4', label: 'Option 4' },
+          { value: 'option5', label: 'Option 5' }
         ]
       },
       {
@@ -406,12 +406,12 @@ export const formTemplates = [
         required: false,
         width: 'full',
         options: [
-          { value: 'quality', label: 'Product Quality' },
-          { value: 'support', label: 'Customer Support' },
-          { value: 'pricing', label: 'Pricing' },
-          { value: 'delivery', label: 'Delivery Speed' },
-          { value: 'website', label: 'Website Experience' },
-          { value: 'communication', label: 'Communication' }
+          { value: 'option1', label: 'Option 1' },
+          { value: 'option2', label: 'Option 2' },
+          { value: 'option3', label: 'Option 3' },
+          { value: 'option4', label: 'Option 4' },
+          { value: 'option5', label: 'Option 5' },
+          { value: 'option6', label: 'Option 6' }
         ]
       },
       {
@@ -576,11 +576,11 @@ export const formTemplates = [
         required: false,
         width: 'full',
         options: [
-          { value: 'under-5k', label: 'Under $5,000' },
-          { value: '5k-10k', label: '$5,000 - $10,000' },
-          { value: '10k-25k', label: '$10,000 - $25,000' },
-          { value: '25k-50k', label: '$25,000 - $50,000' },
-          { value: 'over-50k', label: 'Over $50,000' }
+          { value: 'under-5k', label: 'Under £5,000' },
+          { value: '5k-10k', label: '£5,000 - £10,000' },
+          { value: '10k-25k', label: '£10,000 - £25,000' },
+          { value: '25k-50k', label: '£25,000 - £50,000' },
+          { value: 'over-50k', label: 'Over £50,000' }
         ]
       },
       {
@@ -647,11 +647,11 @@ export const formTemplates = [
         required: true,
         width: 'full',
         options: [
-          { value: 'product-a', label: 'Product A - $29.99' },
-          { value: 'product-b', label: 'Product B - $49.99' },
-          { value: 'product-c', label: 'Product C - $79.99' },
-          { value: 'product-d', label: 'Product D - $99.99' },
-          { value: 'bundle-deal', label: 'Bundle Deal - $199.99' }
+          { value: 'product-a', label: 'Product A - £29.99' },
+          { value: 'product-b', label: 'Product B - £49.99' },
+          { value: 'product-c', label: 'Product C - £79.99' },
+          { value: 'product-d', label: 'Product D - £99.99' },
+          { value: 'bundle-deal', label: 'Bundle Deal - £199.99' }
         ]
       },
       {
