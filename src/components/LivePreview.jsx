@@ -857,7 +857,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
 
       case 'checkbox':
         const checkboxOptions = getElementOptions();
-        console.log('Checkbox options for', element.id, checkboxOptions);
         return (
           <div key={element.id} className={`mb-4 ${getContainerClasses()}`}>
             {!element.hideLabel && (
@@ -1005,9 +1004,7 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (isWizard && currentStep === totalSteps - 1) {
-                    console.log('Form submitted with data:', formValues);
                   } else if (!isWizard) {
-                    console.log('Form submitted with data:', formValues);
                   }
                 }}
               >
