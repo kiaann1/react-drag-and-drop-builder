@@ -32,11 +32,11 @@ const StarRating = ({
     const activeValue = hoverValue || currentValue;
     
     if (activeValue >= starIndex) {
-      return 'full'; // Full star
+      return 'full';
     } else if (activeValue >= starIndex - 0.5) {
-      return 'half'; // Half star
+      return 'half';
     }
-    return 'empty'; // Empty star
+    return 'empty';
   };
 
   return (
@@ -51,7 +51,6 @@ const StarRating = ({
               className="relative cursor-pointer"
               onMouseLeave={handleMouseLeave}
             >
-              {/* Background star (gray) */}
               <svg 
                 className={`${size} text-gray-300 transition-colors duration-150`}
                 fill="currentColor" 
@@ -60,7 +59,6 @@ const StarRating = ({
                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
               </svg>
               
-              {/* Half star overlay */}
               {fillType === 'half' && (
                 <svg 
                   className={`${size} text-yellow-400 absolute inset-0 transition-colors duration-150`}
@@ -72,7 +70,6 @@ const StarRating = ({
                 </svg>
               )}
               
-              {/* Full star overlay */}
               {fillType === 'full' && (
                 <svg 
                   className={`${size} text-yellow-400 absolute inset-0 transition-colors duration-150`}
@@ -83,14 +80,12 @@ const StarRating = ({
                 </svg>
               )}
               
-              {/* Left half clickable area */}
               <div 
                 className="absolute inset-0 w-1/2 z-10"
                 onClick={() => handleStarClick(starIndex, true)}
                 onMouseEnter={() => handleMouseEnter(starIndex, true)}
               />
               
-              {/* Right half clickable area */}
               <div 
                 className="absolute inset-0 left-1/2 w-1/2 z-10"
                 onClick={() => handleStarClick(starIndex, false)}

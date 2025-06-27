@@ -9,12 +9,11 @@ const ACTIONS = [
   { value: 'require', label: 'Require this field' },
   { value: 'unrequire', label: 'Unrequire this field' },
 ];
-// Add more operator types and value input types
 const OPERATORS = [
   { value: 'equals', label: 'Equals', input: 'text' },
   { value: 'notEquals', label: 'Not Equals', input: 'text' },
   { value: 'contains', label: 'Contains', input: 'text' },
-  { value: 'hasValue', label: 'Contains Any Characters/Numbers', input: null }, // <-- Added operator
+  { value: 'hasValue', label: 'Contains Any Characters/Numbers', input: null },
   { value: 'greaterThan', label: 'Greater Than', input: 'number' },
   { value: 'lessThan', label: 'Less Than', input: 'number' },
   { value: 'isEmpty', label: 'Is Empty', input: null },
@@ -30,13 +29,11 @@ const OPERATORS = [
   { value: 'false', label: 'Is False', input: null },
 ];
 
-// Add this definition above your component if missing:
 const COMBINATORS = [
   { value: 'AND', label: 'All rules (AND)' },
   { value: 'OR', label: 'Any rule (OR)' },
 ];
 
-// Helper to get the operator config
 const getOperatorConfig = (operator) => OPERATORS.find(op => op.value === operator) || {};
 
 export default function ConditionalLogicModal({
@@ -46,10 +43,8 @@ export default function ConditionalLogicModal({
   element,
   formElements = [],
 }) {
-  // Prevent rendering if element is missing or invalid
   if (!isOpen || !element || !element.id) return null;
 
-  // Only update logic when element changes (not on open/close)
   const [logic, setLogic] = useState(element?.conditionalLogic || {
     active: false,
     action: 'show',
@@ -66,7 +61,6 @@ export default function ConditionalLogicModal({
     });
   }, [element]);
 
-  // Always update availableFields when formElements or element changes
   const availableFields = useMemo(() => {
     if (!Array.isArray(formElements)) return [];
     const currentId = element && element.id !== undefined && element.id !== null ? String(element.id) : '';
@@ -76,7 +70,6 @@ export default function ConditionalLogicModal({
     });
   }, [formElements, element]);
 
-  // Remove rules that reference fields no longer in the form
   useEffect(() => {
     setLogic(prev => {
       if (!prev.rules) return prev;
@@ -88,11 +81,9 @@ export default function ConditionalLogicModal({
       }
       return prev;
     });
-    // Only run when availableFields changes (i.e., formElements change)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [availableFields]);
 
-  // Only show warning if there are NO available fields
   const showNoFieldsWarning = availableFields.length === 0;
   const canAddRule = availableFields.length > 0;
 
@@ -115,13 +106,12 @@ export default function ConditionalLogicModal({
     setLogic(prev => {
       const updatedRules = prev.rules.map((rule, i) => {
         if (i !== idx) return rule;
-        // If operator changes, reset value if new operator doesn't need input
         if (key === 'operator') {
           const opConfig = getOperatorConfig(value);
           return {
             ...rule,
             operator: value,
-            value: opConfig.input ? rule.value : '', // clear value if not needed
+            value: opConfig.input ? rule.value : '',
           };
         }
         return { ...rule, [key]: value };
@@ -138,9 +128,8 @@ export default function ConditionalLogicModal({
   };
 
   const handleSave = () => {
-    // Only save if there are rules
     if (!logic.rules || logic.rules.length === 0) {
-      onChange && onChange(undefined); // Remove conditional logic if no rules
+      onChange && onChange(undefined);
       onClose && onClose();
       return;
     }
@@ -151,7 +140,6 @@ export default function ConditionalLogicModal({
   return (
     <div className="fixed inset-0 bg-white/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-gray-200">
-        {/* Modal Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
           <h2 className="text-xl font-semibold text-gray-900">Conditional Logic</h2>
           <button
@@ -164,7 +152,6 @@ export default function ConditionalLogicModal({
           </button>
         </div>
 
-        {/* Modal Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)] space-y-6">
           <div className="flex items-center space-x-4 mb-4">
             <select
@@ -226,7 +213,6 @@ export default function ConditionalLogicModal({
                       <option key={op.value} value={op.value}>{op.label}</option>
                     ))}
                   </select>
-                  {/* Show value input if operator requires it */}
                   {opConfig.input === 'text' && (
                     <input
                       placeholder="Value"
@@ -245,7 +231,6 @@ export default function ConditionalLogicModal({
                       type="number"
                     />
                   )}
-                  {/* No input for operators that don't need a value */}
                   <button
                     onClick={() => handleRemoveRule(idx)}
                     className="text-red-500 hover:text-red-700 px-2 py-1 rounded"
@@ -266,7 +251,6 @@ export default function ConditionalLogicModal({
           </div>
         </div>
 
-        {/* Modal Footer */}
         <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gray-50 space-x-3">
           <button
             onClick={onClose}

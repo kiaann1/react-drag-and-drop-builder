@@ -7,7 +7,6 @@ const TemplatesModal = ({ isOpen, onClose, onSelectTemplate }) => {
 
   if (!isOpen) return null;
 
-  // Filter templates based on category and search term
   const filteredTemplates = formTemplates.filter(template => {
     const matchesCategory = selectedCategory === 'all' || 
       template.category.toLowerCase() === selectedCategory;
@@ -48,14 +47,12 @@ const TemplatesModal = ({ isOpen, onClose, onSelectTemplate }) => {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        {/* Background overlay with blur effect */}
         <div 
           className="fixed inset-0 backdrop-blur-sm bg-black bg-opacity-25 transition-all duration-300" 
           aria-hidden="true"
           onClick={onClose}
         ></div>
 
-        {/* Modal content */}
         <div className="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle w-full max-w-6xl sm:p-6 z-10 mx-auto">
           {/* Header */}
           <div className="flex items-center justify-between mb-4 lg:mb-6">
@@ -77,7 +74,6 @@ const TemplatesModal = ({ isOpen, onClose, onSelectTemplate }) => {
             </button>
           </div>
 
-          {/* Search and Filter */}
           <div className="mb-4 lg:mb-6 space-y-3 lg:space-y-4 relative z-10">
             <div className="relative">
               <input
@@ -115,7 +111,6 @@ const TemplatesModal = ({ isOpen, onClose, onSelectTemplate }) => {
             </div>
           </div>
 
-          {/* Templates Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 max-h-80 lg:max-h-96 overflow-y-auto relative z-10">
             {filteredTemplates.map(template => (
               <div
@@ -180,7 +175,6 @@ const TemplatesModal = ({ isOpen, onClose, onSelectTemplate }) => {
             </div>
           )}
 
-          {/* Footer */}
           <div className="mt-4 lg:mt-6 flex flex-col sm:flex-row justify-between items-center pt-4 border-t border-gray-200 relative z-10 space-y-3 sm:space-y-0">
             <div className="text-xs lg:text-sm text-gray-500">
               {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''} available

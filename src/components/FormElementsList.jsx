@@ -92,7 +92,6 @@ export default function FormElementsList({
 
   return (
     <div className="flex gap-8">
-      {/* Form Builder Dropzone */}
       <div
         id="form-builder-dropzone"
         style={{
@@ -124,7 +123,6 @@ export default function FormElementsList({
           <DragOverlay dropAnimation={null}>
             {activeId && draggedPaletteItem
               ? (
-                // Render a simple, non-interactive preview (NO <input>, <button>, etc.)
                 <div
                   style={{
                     pointerEvents: "none",
@@ -150,7 +148,6 @@ export default function FormElementsList({
               )
               : activeId
               ? (
-                // For reordering, show a simple label as well
                 <div
                   style={{
                     pointerEvents: "none",

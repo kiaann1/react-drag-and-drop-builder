@@ -4,7 +4,6 @@ import FormOptionsModal from './FormOptionsModal';
 import WizardNavigation from './WizardNavigation';
 import PageBreakField, { useWizardSteps } from './PageBreakField';
 
-// --- Add conditional logic evaluation utility ---
 function evaluateCondition(rule, formValues) {
   const { field, operator, value } = rule;
   const fieldValue = formValues[field];
@@ -56,21 +55,18 @@ function evaluateCondition(rule, formValues) {
       return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
     case 'true':
     case 'isTrue':
-      // For checkboxes/multiselect: true if any value is checked, or if value is present in array
       if (Array.isArray(fieldValue)) {
         if (value && value !== '') {
           return fieldValue.includes(value);
         }
         return fieldValue.length > 0;
       }
-      // For radio/select: true if value matches or is truthy
       if (typeof fieldValue === 'string') {
         if (value && value !== '') {
           return fieldValue === value;
         }
         return !!fieldValue;
       }
-      // For boolean
       return fieldValue === true || fieldValue === 'true' || fieldValue === 1;
     case 'false':
       return fieldValue === false || fieldValue === 'false' || fieldValue === 0;
@@ -85,24 +81,19 @@ function evaluateLogic(conditionalLogic, formValues) {
   const passed = (combinator === 'OR' ? results.some(Boolean) : results.every(Boolean));
   if (action === 'show') return passed;
   if (action === 'hide') return !passed;
-  // For enable/disable/require/unrequire, always show, but you can add logic for those as needed
   return true;
 }
 
 const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand, formOptions = {}, onUpdateFormOptions }) => {
-  // Always call all hooks first, before any conditional logic
   const [colorValues, setColorValues] = useState({});
   const [rangeValues, setRangeValues] = useState({});
   const [showFormOptions, setShowFormOptions] = useState(false);
   const [error, setError] = useState('');
-  // --- Track form values for conditional logic ---
   const [formValues, setFormValues] = useState({});
   
-  // Wizard state
   const [currentStep, setCurrentStep] = useState(0);
   const { steps, totalSteps, isWizard } = useWizardSteps(formElements);
 
-  // Validate and sanitize form elements
   const validateElement = useCallback((element) => {
     if (!element || typeof element !== 'object') return false;
     if (!element.id || typeof element.id !== 'string') return false;
@@ -149,7 +140,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
     setError('');
   }, []);
 
-  // Filter and validate elements
   const validElements = useMemo(() => {
     return formElements.filter(validateElement);
   }, [formElements, validateElement]);
@@ -158,12 +148,10 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
     return sanitizeFormOptions(formOptions);
   }, [formOptions, sanitizeFormOptions]);
 
-  // --- Update formValues on input change ---
   const handleInputChange = useCallback((id, value) => {
     setFormValues(prev => ({ ...prev, [id]: value }));
   }, []);
 
-  // For checkboxes (multiple selection)
   const handleCheckboxChange = useCallback((id, value, checked) => {
     setFormValues(prev => {
       const prevValue = prev[id] || [];
@@ -176,21 +164,17 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
   }, []);
 
   const renderPreviewElement = (element) => {
-    // Add safety check for undefined elements
     if (!element || !element.type) {
       return null;
     }
 
-    // --- Conditional logic: skip rendering if logic fails ---
     if (element.conditionalLogic && !evaluateLogic(element.conditionalLogic, formValues)) {
       return null;
     }
 
-    // Get field styling classes with form options applied
     const getFieldClasses = () => {
       let classes = "border rounded-md focus:outline-none focus:ring-2";
       
-      // Size classes
       switch (element.size) {
         case 'small':
           classes += " p-2 text-sm";
@@ -202,7 +186,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
           classes += " p-3";
       }
 
-      // Custom CSS class (without dot)
       if (element.customClass) {
         classes += ` ${element.customClass}`;
       }
@@ -210,7 +193,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
       return classes;
     };
 
-    // Get dynamic styles based on form options
     const getFieldStyles = () => {
       return {
         color: formOptions.inputTextColor || '#111827',
@@ -220,23 +202,20 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
       };
     };
 
-    // Get label styles
     const getLabelStyles = () => {
       return {
         color: formOptions.labelTextColor || '#374151',
       };
     };
 
-    // Get placeholder styles
     const getPlaceholderStyles = () => {
       return {
         '--placeholder-color': formOptions.placeholderTextColor || '#9CA3AF',
       };
     };
 
-    // Get container width classes (with safety check)
     const getContainerClasses = () => {
-      const width = element.width || 'full'; // Default to full if undefined
+      const width = element.width || 'full'; 
       switch (width) {
         case 'half':
           return "w-1/2 pr-2 inline-block align-top";
@@ -249,7 +228,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
       }
     };
 
-    // Get default options if none exist
     const getElementOptions = () => {
       if (element.type === 'checkbox') {
         if (Array.isArray(element.options)) {
@@ -263,7 +241,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
                   : `Checkbox ${idx + 1}`
             }));
         }
-        // Default for new checkbox fields
         return [{ label: 'Checkbox 1', value: 'checked' }];
       }
       if (Array.isArray(element.options) && element.options.length > 0) {
@@ -276,7 +253,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
               : `Option ${idx + 1}`
           }));
       }
-      // Default options for new fields
       switch (element.type) {
         case 'select':
         case 'radio':
@@ -295,7 +271,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
 
     switch (element.type) {
       case 'pageBreak':
-        // Page breaks are handled by wizard logic, but show in builder
         return <PageBreakField key={element.id} element={element} isBuilder={true} />;
         
       case 'text':
@@ -956,9 +931,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
     }
   };
 
-  // Filter out invalid elements and ensure we have a clean array (keep only one declaration)
-  // Note: validElements is already declared above using useMemo
-
   return (
     <div className={`${isExpanded ? 'w-full' : 'w-full lg:w-96 lg:min-w-96'} transition-all duration-300 ease-in-out order-3 lg:order-3`}>
       <div className="p-4 lg:p-6 h-full">
@@ -1051,7 +1023,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
                   
                   {isWizard ? (
                     <>
-                      {/* Step Title */}
                       {steps[currentStep] && (
                         <div className="mb-6">
                           <h3 className="text-xl font-semibold text-gray-800">
@@ -1065,16 +1036,13 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
                         </div>
                       )}
                       
-                      {/* Current Step Fields */}
                       {steps[currentStep]?.fields.map(renderPreviewElement)}
                     </>
                   ) : (
-                    // Single-step form (original behavior)
                     validElements.map(renderPreviewElement)
                   )}
                 </div>
                 
-                {/* Navigation Section */}
                 {isWizard ? (
                   <WizardNavigation
                     currentStep={currentStep}
@@ -1115,7 +1083,6 @@ const LivePreview = React.memo(({ formElements = [], isExpanded, onToggleExpand,
           )}
         </div>
 
-        {/* Keep modal always mounted to prevent hook order issues */}
         <FormOptionsModal
           isOpen={showFormOptions}
           onClose={() => setShowFormOptions(false)}

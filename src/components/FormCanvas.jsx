@@ -18,13 +18,11 @@ const FormCanvas = ({
   const [optionsModalOpen, setOptionsModalOpen] = useState(false);
   const [optionsModalElement, setOptionsModalElement] = useState(null);
 
-  // Open the options modal for a field
   const openOptionsModal = (element) => {
     setOptionsModalElement(element);
     setOptionsModalOpen(true);
   };
 
-  // Save handler for FieldOptionsModal that updates the field in formElements
   const handleFieldOptionsSave = (id, updatedData) => {
     if (onUpdateElement) {
       onUpdateElement(id, updatedData);
@@ -71,7 +69,7 @@ const FormCanvas = ({
                       element={element}
                       onRemove={onRemoveElement}
                       onUpdate={onUpdateElement}
-                      formElements={formElements} // <-- Pass all form elements here
+                      formElements={formElements}
                     />
                   ))}
                 </SortableContext>

@@ -27,13 +27,10 @@ const FieldOptionsModal = ({ isOpen, onClose, onSave, element, onSwitchToEdit })
     }
   };
 
-  // Fix: Avoid accessing element.options if element is null
   useEffect(() => {
-    if (!element) return; // Prevent null access
+    if (!element) return;
 
-    // Always use the latest options from element
     let options = Array.isArray(element.options) ? [...element.options] : getDefaultOptions(element?.type);
-    // If the first option label is empty, use the field label as a placeholder
     if (
       ['select', 'radio', 'checkbox', 'multiselect'].includes(element.type) &&
       element.label &&
@@ -58,8 +55,6 @@ const FieldOptionsModal = ({ isOpen, onClose, onSave, element, onSwitchToEdit })
   if (!isOpen || !element) return null;
 
   const handleSave = () => {
-    // Ensure the id is included in the saved data
-    // Always pass a new array for options to trigger React updates
     if (onSave) {
       onSave(element.id, { ...optionsData, id: element.id, type: element.type, options: [...optionsData.options] });
     }
@@ -200,7 +195,6 @@ const FieldOptionsModal = ({ isOpen, onClose, onSave, element, onSwitchToEdit })
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {optionsData.options.map((option, index) => (
                   <div key={index} className="flex gap-2 items-center">
-                    {/* Only show label input if label is not empty, otherwise just show value */}
                     <input
                       type="text"
                       value={option.label}

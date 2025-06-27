@@ -81,13 +81,11 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
       return;
     }
 
-    // Check rate limiting
     if (!exportRateLimiter.current.isAllowed()) {
       setExportError('Too many export attempts. Please wait a moment before trying again.');
       return;
     }
 
-    // CSV and Excel files should be downloaded, not copied
     if (selectedFormat === 'csv' || selectedFormat === 'excel') {
       await handleDownloadExport();
       return;
@@ -95,7 +93,6 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
 
     const code = generateCode();
     
-    // Validate export data for security
     const validation = validateExportData(code, selectedFormat);
     if (!validation.isValid) {
       setExportError(`Export validation failed: ${validation.errors.join(', ')}`);
@@ -151,14 +148,12 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
     }
   };
 
-  // Handle download export for CSV and Excel files
   const handleDownloadExport = async () => {
     if (!formName.trim()) {
       setExportError('Please enter a form name before exporting.');
       return;
     }
 
-    // Check rate limiting
     if (!exportRateLimiter.current.isAllowed()) {
       setExportError('Too many export attempts. Please wait a moment before trying again.');
       return;
@@ -200,7 +195,6 @@ const SaveFormModal = ({ isOpen, onClose, formElements, formOptions = {} }) => {
     }
   };
 
-  // Save to localStorage
   const handleSave = () => {
     if (!formName.trim()) {
       Swal.fire({

@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import fields from '../../fields.json';
 
-// Draggable preview for each field
 const DraggableElement = ({ element }) => {
-  // Ensure label fallback for elements missing label
   const label = element.label || element.name || element.type || "Field";
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -46,7 +44,6 @@ const DraggableElement = ({ element }) => {
 const FormElementsPalette = ({ searchTerm = '' }) => {
   const [openCategory, setOpenCategory] = useState(null);
 
-  // Group fields by category (ensure each field in fields.json has a 'category' property)
   const categories = Array.from(
     fields.reduce((map, item) => {
       const cat = item.category || "Other";
@@ -56,7 +53,6 @@ const FormElementsPalette = ({ searchTerm = '' }) => {
     }, new Map())
   );
 
-  // Filter elements based on search term
   const filterElements = (elements) => {
     if (!searchTerm) return elements;
     const searchLower = searchTerm.toLowerCase().trim();
@@ -68,7 +64,6 @@ const FormElementsPalette = ({ searchTerm = '' }) => {
 
   return (
     <div>
-      {/* Accordion for each category */}
       {categories.map(([category, items]) => (
               <div
                 key={category}

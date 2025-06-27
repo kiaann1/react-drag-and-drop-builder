@@ -16,7 +16,6 @@ const EditFieldModal = ({ isOpen, onClose, onSave, element, onSwitchToOptions })
   });
   const [error, setError] = useState('');
 
-  // Input sanitization function
   const sanitizeInput = useCallback((value, type = 'text') => {
     if (typeof value !== 'string') return value;
     
@@ -24,15 +23,12 @@ const EditFieldModal = ({ isOpen, onClose, onSave, element, onSwitchToOptions })
     
     switch (type) {
       case 'text':
-        // Remove HTML tags and limit length
         sanitized = sanitized.replace(/<[^>]*>/g, '').slice(0, 1000);
         break;
       case 'number':
-        // Ensure it's a valid number
         const num = parseFloat(sanitized);
         return isNaN(num) ? '' : num.toString();
       case 'pattern':
-        // Validate regex pattern
         try {
           new RegExp(sanitized);
           return sanitized.slice(0, 200);
@@ -41,7 +37,6 @@ const EditFieldModal = ({ isOpen, onClose, onSave, element, onSwitchToOptions })
           return '';
         }
       case 'className':
-        // Only allow valid CSS class characters
         return sanitized.replace(/[^a-zA-Z0-9-_]/g, '').slice(0, 100);
       default:
         return sanitized.slice(0, 500);
@@ -54,7 +49,6 @@ const EditFieldModal = ({ isOpen, onClose, onSave, element, onSwitchToOptions })
     switch (name) {
       case 'minLength':
       case 'maxLength':
-        // If empty, treat as 0 (valid)
         if (value === '' || value === null || value === undefined) return '';
         const length = parseInt(value, 10);
         if (isNaN(length) || length < 0 || length > 10000) {
@@ -112,15 +106,12 @@ const EditFieldModal = ({ isOpen, onClose, onSave, element, onSwitchToOptions })
   const handleSave = useCallback(() => {
     try {
 
-      // Validate min/max length relationship
-      // If minLength is empty, treat as 0
       const minLen = formData.minLength === '' ? 0 : parseInt(formData.minLength, 10);
       const maxLen = formData.maxLength === '' ? undefined : parseInt(formData.maxLength, 10);
       if (maxLen !== undefined && minLen > maxLen) {
         setError('Minimum length cannot be greater than maximum length');
         return;
       }
-      // Ensure id and type are included in the saved data
       onSave(element.id, { ...formData, id: element.id, type: element.type, minLength: minLen, maxLength: maxLen });
       onClose();
     } catch (err) {

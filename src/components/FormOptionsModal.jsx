@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 const FormOptionsModal = ({ isOpen, onClose, onSave, formOptions }) => {
   const [activeTab, setActiveTab] = useState('styling');
   const [options, setOptions] = useState({
-    // Styling options
     submitButtonColor: '#3B82F6',
     submitButtonHoverColor: '#2563EB',
     submitButtonTextColor: '#FFFFFF',
@@ -14,23 +13,19 @@ const FormOptionsModal = ({ isOpen, onClose, onSave, formOptions }) => {
     inputFocusBorderColor: '#3B82F6',
     backgroundColor: '#FFFFFF',
     containerBackgroundColor: '#F9FAFB',
-    // General form options
     formTitle: '',
     formDescription: '',
     submitButtonText: 'Submit Form',
     successMessage: 'Thank you for your submission!',
     errorMessage: 'Please correct the errors below.',
-    // Behavior options
     redirectUrl: '',
     showProgressBar: false,
     allowSaveDraft: false,
     enableAutoSave: false,
     showRequiredAsterisk: true,
-    // Validation options
     showValidationOnBlur: true,
     showValidationOnSubmit: true,
     highlightErrorFields: true,
-    // Export options
     exportFormat: 'html',
     includeValidation: true,
     includeStyling: true,
@@ -59,12 +54,10 @@ const FormOptionsModal = ({ isOpen, onClose, onSave, formOptions }) => {
     { id: 'validation', label: 'Validation', icon: '✅' },
   ];
 
-  // Always render the component, but conditionally show it
   if (!isOpen) {
     return null;
   }
 
-  // Render tab content functions
   const renderStylingTab = () => (
     <div className="space-y-6">
       <div>
@@ -433,9 +426,7 @@ const FormOptionsModal = ({ isOpen, onClose, onSave, formOptions }) => {
           </button>
         </div>
 
-        {/* Modal Content */}
         <div className="flex h-[calc(80vh-120px)]">
-          {/* Sidebar Tabs */}
           <div className="w-48 bg-gray-50 border-r border-gray-200 p-4">
             <nav className="space-y-2">
               {tabs.map((tab) => (
@@ -461,7 +452,6 @@ const FormOptionsModal = ({ isOpen, onClose, onSave, formOptions }) => {
           </div>
         </div>
 
-        {/* Modal Footer */}
         <div className="flex items-center justify-end p-6 border-t border-gray-200 bg-gray-50 space-x-3">
           <button
             onClick={onClose}

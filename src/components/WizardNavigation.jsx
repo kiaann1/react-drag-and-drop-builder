@@ -18,7 +18,6 @@ const WizardNavigation = ({
 
   return (
     <div className="wizard-navigation bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-      {/* Progress Bar */}
       <div className="flex-1 max-w-lg mr-6">
         <div className="flex items-center">
           <span className="text-sm text-gray-500 mr-3">
@@ -32,7 +31,6 @@ const WizardNavigation = ({
           </div>
         </div>
         
-        {/* Step Indicators */}
         {showStepNumbers && (
           <div className="flex justify-between mt-2">
             {Array.from({ length: totalSteps }).map((_, index) => (
@@ -51,7 +49,6 @@ const WizardNavigation = ({
         )}
       </div>
 
-      {/* Navigation Buttons */}
       <div className="flex items-center space-x-3">
         <button
           type="button"

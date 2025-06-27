@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 
 const PageBreakField = ({ element, isBuilder = false }) => {
   if (isBuilder) {
-    // In the form builder, show a visual representation
     return (
       <div className="page-break-field border-2 border-dashed border-blue-300 bg-blue-50 rounded-lg p-4 my-4">
         <div className="flex items-center justify-center space-x-2 text-blue-600">
@@ -23,12 +22,9 @@ const PageBreakField = ({ element, isBuilder = false }) => {
     );
   }
 
-  // In the live preview, this would be handled by the wizard logic
-  // and wouldn't render anything directly
   return null;
 };
 
-// Hook to split form elements into steps based on page breaks
 export const useWizardSteps = (formElements) => {
   return useMemo(() => {
     if (!formElements || formElements.length === 0) {
@@ -45,12 +41,10 @@ export const useWizardSteps = (formElements) => {
 
     formElements.forEach((element, index) => {
       if (element.type === 'pageBreak') {
-        // Complete current step if it has fields
         if (currentStep.fields.length > 0) {
           steps.push(currentStep);
         }
         
-        // Start new step
         currentStep = {
           id: `step-${steps.length}`,
           title: element.label || `Step ${steps.length + 2}`,
@@ -62,12 +56,10 @@ export const useWizardSteps = (formElements) => {
       }
     });
 
-    // Add the last step if it has fields
     if (currentStep.fields.length > 0) {
       steps.push(currentStep);
     }
 
-    // If no page breaks found, treat entire form as single step
     if (steps.length === 0 && formElements.length > 0) {
       steps.push({
         id: 'step-0',

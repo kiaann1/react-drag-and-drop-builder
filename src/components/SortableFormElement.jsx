@@ -41,7 +41,7 @@ const SortableFormElement = ({ element, onRemove, onUpdate, formElements }) => {
   };
 
   const getContainerClasses = () => {
-    const width = element.width || 'full'; // Default to full if undefined
+    const width = element.width || 'full';
     switch (width) {
       case 'half':
         return "w-1/2 pr-2 inline-block align-top";
@@ -55,7 +55,6 @@ const SortableFormElement = ({ element, onRemove, onUpdate, formElements }) => {
   };
 
   const renderFormElement = () => {
-    // Get default options if none exist
     const getElementOptions = () => {
       if (element.options && element.options.length > 0) {
         return element.options;
@@ -73,9 +72,7 @@ const SortableFormElement = ({ element, onRemove, onUpdate, formElements }) => {
       }
     };
 
-    // Render for checkbox type
     if (element.type === 'checkbox') {
-      // Always render a single checkbox, regardless of options length
       return (
         <label className="flex items-center space-x-2">
           <input
@@ -246,7 +243,6 @@ const SortableFormElement = ({ element, onRemove, onUpdate, formElements }) => {
           ${getContainerClasses()}
         `}
       >
-        {/* Drop indicator when hovering */}
         {isOver && (
           <div className="absolute -top-1 left-0 right-0 h-0.5 bg-blue-400 rounded"></div>
         )}
@@ -299,7 +295,6 @@ const SortableFormElement = ({ element, onRemove, onUpdate, formElements }) => {
               className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-blue-600 p-1 rounded transition-all"
               title="Logic"
             >
-              {/* Changed to a sliders/settings icon to differentiate from edit */}
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16M9 6v12m6-6v6" />
               </svg>
